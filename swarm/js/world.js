@@ -156,7 +156,7 @@ class World {
     this.shake = 0; this.slowmo = 0; this.won = false; this.over = false;
     this.mutNext = 0; this.mutCount = 0; this.mutLevels = {};
     this.statKills = 0; this.statCompKills = 0; this.statMotes = 0; this.peak = 0;
-    this.cam = { x: 0, y: 0, scale: 0.5 };
+    this.cam = { x: 0, y: 0, scale: 0.5 }; this.camOffY = 0; this.streak = 0; this.streakT = 0;
     this.build();
   }
 
@@ -166,7 +166,7 @@ class World {
   build() {
     const o = this.o, mode = this.mode;
     // игрок
-    if (mode !== "menu") {
+    if (o.player) {
       const pc = o.player;
       this.player = new Swarm({ player: true, n: pc.startN, peak: pc.startN, hue: pc.hue, spread: pc.spread, cap: this.capP, mods: Object.assign({}, pc.mods), name: "Ты" });
       this.player.base = pc;
@@ -174,8 +174,10 @@ class World {
       this.player.x = px; this.player.y = py;
       this.swarms.push(this.player);
       for (let i = 0; i < Math.min(this.player.targetVis(), this.player.cap); i++) this.player.addParticle(px + (Math.random() - 0.5) * 60, py + (Math.random() - 0.5) * 60);
-      this.mutNext = pc.startN * 2.3;
+      this.mutNext = pc.startN * 2.3; this.mutPrev = pc.startN;
       this.cam.x = px; this.cam.y = py;
+      // высадка: камера стартует издалека и пикирует к рою
+      this.cam.scale = (Math.min(window.innerWidth, window.innerHeight) / 2) / Math.max(440, this.player.r * 3.6) * 0.22;
     }
     // маяки
     if (mode === "campaign") {
@@ -323,10 +325,12 @@ class World {
     }
     // мутации
     if (P && P.alive && this.mode !== "menu" && this.mutCount < 9 && P.n >= this.mutNext) {
-      this.mutCount++; this.mutNext = P.n * 2.2;
+      this.mutCount++; this.mutPrev = P.n; this.mutNext = P.n * 2.2;
       this.events("mutation", this.mutOptions());
     }
     if (P && P.n > this.peak) this.peak = P.n;
+    if (this.mode === "menu" && P) { P.invul = 9; if (P.n > 900) P.n = 900; }
+    if (this.streakT > 0) { this.streakT -= dt; if (this.streakT <= 0) this.streak = 0; }
     this.updateCamera(dt);
   }
 
@@ -480,6 +484,8 @@ class World {
     for (let i = 0; i < drop; i++) this.addMote(s.x + this.rand(-1, 1) * s.r, s.y + this.rand(-1, 1) * s.r, Math.max(1, s.peak * 0.15 / drop), 2);
     const byP = s.lastHit && s.lastHit.player;
     if (byP) {
+      this.streak = this.streakT > 0 ? this.streak + 1 : 1; this.streakT = 3.5;
+      if (this.streak >= 2) this.events("streak", this.streak);
       this.statKills++; if (s.lastHit.comp > 0.5) this.statCompKills++;
       this.events("kill", { name: s.name, comp: s.lastHit.comp > 0.5, n: s.peak, boss: s.boss });
       if (s.peak > this.player.n * 0.5 || s.boss) this.slowmo = s.boss ? 1.4 : 0.5;
@@ -658,7 +664,11 @@ class World {
             b.lit = true; this.burst(b.x, b.y, this.B.edge, 90, 520, 1.4, 15); this.shake = 0.5;
             this.waves.push({ x: b.x, y: b.y, r: 0, max: 900, life: 1.1, col: this.B.edge });
             this.events("beaconLit", this.beacons.filter(q => q.lit).length);
-            if (this.beacons.every(q => q.lit)) { this.won = true; this.slowmo = 1.2; this.events("win"); }
+            if (this.beacons.every(q => q.lit)) {
+              this.won = true; this.slowmo = 1.2; this.events("win");
+              const P = this.player; this.waves.push({ x: P.x, y: P.y, r: 0, max: this.R * 1.4, life: 1.8, col: this.B.edge });
+              for (let k = 0; k < 6; k++) this.burst(P.x, P.y, hsl(this.B.hue + k * 50, 90, 65), 30, 700, 1.6, 16);
+            }
           }
         }
       } else b.p = Math.max(0, b.p - dt * 0.04);
@@ -703,6 +713,7 @@ class World {
     if (this.player) {
       const P = this.player;
       tx = P.x + P.vx * 0.25; ty = P.y + P.vy * 0.25; V = Math.max(440, P.r * 3.6);
+      ty += this.camOffY / Math.max(0.05, c.scale);
     } else { tx = Math.cos(this.t * 0.05) * this.R * 0.4; ty = Math.sin(this.t * 0.04) * this.R * 0.4; V = 900; }
     if (this.bkey === "dark" || this.hazardsHas("dark")) V *= 0.9;
     c.x += (tx - c.x) * Math.min(1, dt * 3); c.y += (ty - c.y) * Math.min(1, dt * 3);
@@ -773,7 +784,7 @@ class World {
         if (ratio > 1.1) Rn.quad(s.x, s.y, s.reff * 1.25 + 20, 1, 0.2, 0.25, 0.45, 1, 0.05);
         else if (ratio < 0.7) Rn.quad(s.x, s.y, s.reff * 1.25 + 20, 0.3, 1, 0.5, 0.22, 1, 0.05);
       }
-      if (s.invul > 0) Rn.quad(s.x, s.y, s.r * 1.35, 1, 1, 1, 0.3 + 0.2 * Math.sin(t * 20), 1, 0.06);
+      if (s.invul > 0 && this.mode !== "menu") Rn.quad(s.x, s.y, s.r * 1.35, 1, 1, 1, 0.3 + 0.2 * Math.sin(t * 20), 1, 0.06);
       const base = clamp(s.r * 0.13, 10, 34) * (s.player ? 1.15 : 1);
       const sat = s.vis >= s.cap ? Math.min(2.2, Math.pow(s.n / Math.max(1, Math.pow((s.cap - 6) / 4.2, 1 / 0.72)), 0.25)) : 1;
       const sz = base * sat * (1 - 0.15 * s.comp), re = Math.max(10, s.reff);
@@ -782,6 +793,14 @@ class World {
       const tw = t * 6;
       for (let i = 0; i < s.vis; i++) Rn.point(s.px[i], s.py[i], sz * s.sz[i], s.cr[i], s.cg[i], s.cb[i], a * (0.75 + 0.25 * Math.sin(tw + s.ph[i] * 7)));
       Rn.point(s.x, s.y, s.reff * 0.9, col[0], col[1], col[2], 0.1 + s.comp * 0.2);
+    }
+    // пылинки переднего плана (параллакс — ощущение глубины)
+    const T = 1800 / Math.max(0.25, c.scale * 1.6), dc = this.B.edge;
+    for (let i = 0; i < 46; i++) {
+      const hx = ((i * 7919) % 1000) / 1000, hy = ((i * 104729) % 1000) / 1000, p = 1.35 + (i % 3) * 0.15;
+      let px = (hx * T - c.x * (p - 1)) % T, py = (hy * T - c.y * (p - 1)) % T; if (px < 0) px += T; if (py < 0) py += T;
+      const tw = 0.5 + 0.5 * Math.sin(t * (0.6 + (i % 5) * 0.2) + i);
+      Rn.point(c.x + px - T / 2, c.y + py - T / 2, (5 + (i % 4) * 3) / Math.max(0.3, c.scale) * 0.45, 0.7 + dc[0] * 0.3, 0.7 + dc[1] * 0.3, 0.7 + dc[2] * 0.3, 0.12 + tw * 0.22);
     }
     // волны
     for (const w of this.waves) Rn.quad(w.x, w.y, Math.max(10, w.r), w.col[0], w.col[1], w.col[2], w.life, 1, 0.06);
