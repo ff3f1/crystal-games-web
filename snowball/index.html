@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#8fc4f0">
+<title>Снежный ком</title>
+<link rel="icon" href="icon.png">
+<style>
+@font-face{font-family:Nunito;font-weight:400;font-display:swap;src:url(fonts/nunito-cyrillic-400-normal.woff2) format("woff2");unicode-range:U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116}
+@font-face{font-family:Nunito;font-weight:400;font-display:swap;src:url(fonts/nunito-latin-400-normal.woff2) format("woff2");unicode-range:U+0000-00FF,U+2000-206F,U+2190-21FF,U+2600-27BF}
+@font-face{font-family:Nunito;font-weight:900;font-display:swap;src:url(fonts/nunito-cyrillic-900-normal.woff2) format("woff2");unicode-range:U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116}
+@font-face{font-family:Nunito;font-weight:900;font-display:swap;src:url(fonts/nunito-latin-900-normal.woff2) format("woff2");unicode-range:U+0000-00FF,U+2000-206F,U+2190-21FF,U+2600-27BF}
+:root{--ink:#1d2b4f;--sky:#8fc4f0;--snow:#f6fbff;--red:#ff4d5e;--gold:#ffc42e;--mint:#3fd9a8;--st:env(safe-area-inset-top,0px);--sb:env(safe-area-inset-bottom,0px)}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
+html,body{margin:0;height:100%;overflow:hidden;background:var(--sky);font-family:Nunito,"Trebuchet MS",Roboto,sans-serif;color:var(--ink);touch-action:none;overscroll-behavior:none}
+#c{position:fixed;inset:0;width:100%;height:100%;display:block}
+.ic{width:1em;height:1em;vertical-align:-.13em}
+/* наклейки: толстая обводка, «вырезанные» углы — как стикеры на санках */
+.sticker{background:#fff;border:3px solid var(--ink);border-radius:22px;box-shadow:0 5px 0 var(--ink)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;font:900 22px Nunito,sans-serif;color:#fff;border:3px solid var(--ink);border-radius:20px;padding:13px 26px;cursor:pointer;
+ background:var(--red);box-shadow:0 5px 0 var(--ink);text-shadow:0 2px 0 rgba(0,0,0,.18);transition:transform .07s;min-width:170px}
+.btn:active{transform:translateY(4px);box-shadow:0 1px 0 var(--ink)}
+.btn.gold{background:var(--gold);color:var(--ink);text-shadow:none}
+.btn.mint{background:var(--mint);color:var(--ink);text-shadow:none}
+.btn.white{background:#fff;color:var(--ink);text-shadow:none}
+.btn.small{font-size:16px;padding:9px 16px;min-width:0;border-radius:16px}
+.btn[disabled]{filter:grayscale(.8);opacity:.6;pointer-events:none}
+.top{position:fixed;left:0;right:0;top:0;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:calc(10px + var(--st)) 12px 0;pointer-events:none;z-index:5}
+.top>*{pointer-events:auto}
+.coins{display:flex;align-items:center;gap:6px;font-weight:900;font-size:20px;padding:5px 14px 5px 8px;border-radius:999px}
+.coin{width:24px;height:24px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff3b0,var(--gold) 55%,#e09a00);border:2.5px solid var(--ink);display:inline-block;flex:none}
+.pbtn{width:46px;height:46px;border-radius:15px;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:900;cursor:pointer}
+.prog{flex:1;max-width:240px;height:18px;border-radius:10px;position:relative;overflow:visible;background:#fff;border:3px solid var(--ink)}
+.prog .fill{position:absolute;left:0;top:0;bottom:0;border-radius:7px;background:linear-gradient(90deg,#9ad8ff,#5fb6f5)}
+.prog .flag{position:absolute;right:-12px;top:-10px;font-size:22px}
+.size{position:fixed;left:0;right:0;top:calc(66px + var(--st));text-align:center;pointer-events:none;z-index:5}
+.size b{display:inline-block;font-size:30px;font-weight:900;color:#fff;-webkit-text-stroke:2px var(--ink);paint-order:stroke;text-shadow:0 3px 0 var(--ink)}
+.size b.bump{animation:bump .25s}
+@keyframes bump{40%{transform:scale(1.25)}}
+.hint{position:fixed;left:16px;right:16px;bottom:calc(120px + var(--sb));text-align:center;font-weight:900;font-size:20px;color:#fff;-webkit-text-stroke:5px var(--ink);paint-order:stroke;opacity:0;transition:opacity .35s;pointer-events:none;z-index:5}
+.hint.on{opacity:1}
+.pop{position:fixed;font-weight:900;font-size:24px;color:#fff;-webkit-text-stroke:5px var(--ink);paint-order:stroke;pointer-events:none;transform:translate(-50%,-50%);animation:up .9s ease-out forwards;z-index:6;white-space:nowrap}
+@keyframes up{to{margin-top:-70px;opacity:0}}
+.big{position:fixed;left:0;right:0;top:30%;text-align:center;font-weight:900;font-size:46px;color:#fff;-webkit-text-stroke:7px var(--ink);paint-order:stroke;pointer-events:none;opacity:0;z-index:6}
+.big.on{animation:big 1.4s ease forwards}
+.big small{display:block;font-size:20px;-webkit-text-stroke:5px var(--ink)}
+.big.pw{font-size:38px;top:24%}
+@keyframes big{0%{opacity:0;transform:scale(.4) rotate(-6deg)}18%{opacity:1;transform:scale(1.12) rotate(2deg)}30%{transform:scale(1)}80%{opacity:1}100%{opacity:0}}
+
+.scr{position:fixed;inset:0;display:none;flex-direction:column;align-items:center;z-index:10;padding:calc(70px + var(--st)) 18px calc(18px + var(--sb))}
+.scr.on{display:flex}
+.logo{margin-top:4vh;text-align:center;line-height:.86}
+.logo h1{margin:0;font-weight:900;font-size:clamp(56px,17vw,92px);color:#fff;-webkit-text-stroke:9px var(--ink);paint-order:stroke;text-shadow:0 8px 0 var(--ink);transform:rotate(-4deg)}
+.logo h1 span{display:block;color:var(--red);transform:rotate(3deg) translateX(18px)}
+.lvl{margin-top:16px;font-weight:900;font-size:18px;padding:6px 16px;border-radius:999px;display:inline-block}
+.grow{flex:1}
+.upg{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:min(100%,420px);margin-bottom:14px}
+.up{padding:10px 6px 10px;text-align:center;cursor:pointer;border-radius:20px}
+.up:active{transform:translateY(3px);box-shadow:0 2px 0 var(--ink)}
+.up .em{font-size:30px;line-height:1}
+.up b{display:block;font-size:14px;margin-top:4px}
+.up small{display:block;font-size:12px;opacity:.7}
+.up .cost{display:inline-flex;align-items:center;gap:4px;margin-top:6px;font-weight:900;font-size:15px;background:var(--gold);border:2.5px solid var(--ink);border-radius:12px;padding:2px 9px}
+.up .cost .coin{width:16px;height:16px;border-width:2px}
+.up.no{opacity:.55}
+.up.no .cost{background:#e6ecf5}
+.tap{font-weight:900;font-size:17px;color:#fff;-webkit-text-stroke:4px var(--ink);paint-order:stroke;margin-top:12px;animation:pulse 1.2s ease-in-out infinite}
+@keyframes pulse{50%{transform:scale(1.08)}}
+.ov{position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:20;background:rgba(29,43,79,.35);padding:16px}
+.ov.on{display:flex}
+.card{width:min(100%,380px);padding:22px 18px 18px;text-align:center;animation:drop .35s cubic-bezier(.2,1.5,.4,1)}
+@keyframes drop{from{transform:translateY(-40px) rotate(-3deg);opacity:0}}
+.card h2{margin:0;font-weight:900;font-size:32px;line-height:1.05}
+.card p{margin:8px 0;font-size:16px;opacity:.8}
+.mult{display:inline-block;margin:12px 0 4px;font-weight:900;font-size:58px;color:#fff;-webkit-text-stroke:8px var(--ink);paint-order:stroke;transform:rotate(-5deg)}
+.gain{display:flex;align-items:center;justify-content:center;gap:10px;font-weight:900;font-size:36px}
+.gain .coin{width:34px;height:34px;border-width:3px}
+.col{display:flex;flex-direction:column;align-items:center;gap:12px;margin-top:16px}
+#toast{position:fixed;left:50%;bottom:calc(110px + var(--sb));transform:translateX(-50%);z-index:30;font-weight:900;padding:10px 16px;opacity:0;transition:opacity .25s;pointer-events:none;max-width:90vw;text-align:center}
+#toast.on{opacity:1}
+#adov .card{max-width:280px}
+.set{display:flex;justify-content:space-between;align-items:center;font-weight:900;font-size:18px;padding:10px 4px;border-bottom:2px dashed rgba(29,43,79,.2)}
+.tgl{width:56px;height:32px;border-radius:18px;border:3px solid var(--ink);background:#e6ecf5;position:relative;cursor:pointer}
+.tgl::after{content:"";position:absolute;top:2px;left:2px;width:22px;height:22px;border-radius:50%;background:#fff;border:2.5px solid var(--ink);transition:.15s}
+.tgl.on{background:var(--mint)}
+.tgl.on::after{left:25px}
+.skins{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px}
+.sk{border-radius:16px;padding:8px 2px 6px;cursor:pointer;font-size:12px;font-weight:900;display:flex;flex-direction:column;align-items:center;gap:4px}
+.sk canvas{width:46px;height:46px}
+.sk.sel{background:var(--mint)}
+.sk.lock{opacity:.6}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+
+<div class="top" id="topbar">
+  <div class="sticker pbtn" id="bPause" style="display:none">II</div>
+  <div class="prog" id="prog" style="display:none"><div class="fill" id="progFill"></div><span class="flag">🏁</span></div>
+  <div class="sticker coins"><span class="coin"></span><span id="coinV">0</span></div>
+</div>
+<div class="size" id="sizeBox" style="display:none"><b id="sizeV">0,5 м</b></div>
+<div class="hint" id="hint"></div>
+<div class="big" id="big"></div>
+
+<!-- Старт -->
+<div class="scr" id="start">
+  <div class="logo"><h1>Снежный<span>ком</span></h1><div class="sticker lvl" id="lvlV">Уровень 1</div></div>
+  <div class="grow"></div>
+  <div class="tap" id="tapTxt">Коснись и веди пальцем</div>
+  <div class="grow" style="max-height:30px"></div>
+  <div class="upg" id="upg"></div>
+  <div style="display:flex;gap:10px"><button class="btn" id="bPlay">Катить!</button><button class="btn white small" id="bSkins" style="font-size:22px;padding:10px 14px">⛄</button><button class="btn white small" id="bSet" style="font-size:22px;padding:10px 14px">⚙</button></div>
+</div>
+
+<div class="ov" id="ovEnd"><div class="card sticker" id="endCard"></div></div>
+<div class="ov" id="ovFail"><div class="card sticker"><h2>Ком рассыпался!</h2><p>Не врезайся в то, что больше тебя — оно подсвечено красным</p>
+  <div class="col"><button class="btn gold" id="bRevive">▶ Продолжить</button><button class="btn white small" id="bRetry">Заново</button></div></div></div>
+<div class="ov" id="ovPause"><div class="card sticker"><h2>Пауза</h2><div class="col"><button class="btn" id="bResume">Дальше</button><button class="btn white small" id="bHome">В меню</button></div></div></div>
+<div class="ov" id="ovSet"><div class="card sticker"><h2>Настройки</h2>
+  <div class="set">Звук<div class="tgl" data-s="sound"></div></div>
+  <div class="set">Музыка<div class="tgl" data-s="music"></div></div>
+  <div class="set">Вибрация<div class="tgl" data-s="vibro"></div></div>
+  <p><a href="privacy.html" target="_blank" style="color:var(--ink)">Политика конфиденциальности</a></p>
+  <div class="col"><button class="btn mint small" data-close>Готово</button></div></div></div>
+<div class="ov" id="ovSkins"><div class="card sticker"><h2>Комы</h2><p>Открывай новые за монеты</p><div class="skins" id="skins"></div>
+  <div class="col"><button class="btn mint small" data-close>Готово</button></div></div></div>
+<div class="ov" id="adov"><div class="card sticker"><h2>Реклама</h2><p>Тестовый показ…</p></div></div>
+<div class="sticker" id="toast"></div>
+
+<script src="js/game.js"></script>
+</body>
+</html>
