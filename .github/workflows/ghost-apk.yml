@@ -1,0 +1,66 @@
+name: Ghost Reel Android APK
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'ghost-reel.html'
+      - 'ghost-android/**'
+      - '.github/workflows/ghost-apk.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v3
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+      - name: Bundle latest Ghost Reel interface
+        run: |
+          mkdir -p ghost-android/app/src/main/assets
+          cp ghost-reel.html ghost-android/app/src/main/assets/index.html
+      - name: Optional RuStore release key
+        env:
+          KEYSTORE_B64: ${{ secrets.KEYSTORE_B64 }}
+        run: |
+          if [ -n "$KEYSTORE_B64" ]; then
+            echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/ghost-release.jks"
+            echo "GHOST_KEYSTORE_PATH=$RUNNER_TEMP/ghost-release.jks" >> "$GITHUB_ENV"
+          else
+            echo "::notice::Testing APK uses debug signing. Configure stable release signing for RuStore."
+          fi
+      - name: Build APK
+        working-directory: ghost-android
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: gradle :app:assembleRelease --no-daemon --stacktrace -PvCode=${{ github.run_number }} -PvName=1.0.${{ github.run_number }}
+      - name: Collect installable package
+        run: |
+          mkdir -p dist
+          cp ghost-android/app/build/outputs/apk/release/*.apk dist/ghost-reel.apk
+          ls -lh dist/ghost-reel.apk
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ghost-reel-apk
+          path: dist/ghost-reel.apk
+          retention-days: 60
+      - name: Publish direct-download APK branch
+        run: |
+          cd dist
+          git init -q -b ghost-apks
+          git config user.email "actions@github.com"
+          git config user.name "ghost-reel-builder"
+          git add ghost-reel.apk
+          git commit -qm "Ghost Reel APK build ${{ github.run_number }}"
+          git push -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}" HEAD:ghost-apks
