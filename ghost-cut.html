@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#08131e">
+<title>Призрак · Стык — MVP 0.1</title>
+<style>
+:root{color-scheme:dark;--bg:#08131e;--panel:#152332;--line:#324354;--txt:#eef5fa;--muted:#9eb3c4;--mint:#b7ff90;font-family:system-ui,-apple-system,"Segoe UI",Arial,sans-serif}*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 50% -15%,#244b53,transparent 50%),var(--bg);color:var(--txt);min-height:100dvh}header{padding:18px 18px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}h1{font-size:23px;letter-spacing:-.6px;margin:0}header em{font-style:normal;color:var(--mint)}.beta{font-size:11px;letter-spacing:1px;background:#294144;padding:6px 9px;border-radius:40px;color:#c9f6e9}main{max-width:1080px;margin:auto;padding:22px 13px 55px}.subtitle{font-size:14px;line-height:1.5;max-width:840px;color:var(--muted);margin:0 0 17px}.grid{display:grid;grid-template-columns:minmax(280px,420px) minmax(300px,1fr);gap:15px;align-items:start}.card{background:linear-gradient(145deg,#182c3a,#111e2a);border:1px solid var(--line);border-radius:19px;padding:16px}.preview{position:relative;max-width:420px;margin:0 auto}.screen{width:100%;aspect-ratio:9/16;max-height:63dvh;border-radius:14px;background:repeating-linear-gradient(45deg,#162a35,#162a35 10px,#1d3140 10px,#1d3140 20px);overflow:hidden;position:relative;touch-action:none}video#camera,video#display,.screen img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}.screen img{z-index:3;opacity:.5;pointer-events:none;display:none}.screen #camera{z-index:2;display:none}.screen #display{z-index:1;display:none}.screen .guide{z-index:4;position:absolute;inset:0;pointer-events:none;background:linear-gradient(90deg,transparent 49.8%,#ffffff38 50%,transparent 50.2%),linear-gradient(0deg,transparent 49.8%,#ffffff38 50%,transparent 50.2%)}.screen .empty{position:absolute;z-index:1;top:46%;width:100%;padding:20px;text-align:center;font-weight:700;color:#91aab7;line-height:1.6}.screen .status{position:absolute;z-index:5;bottom:9px;left:10px;right:10px;font-size:11px;background:#071923cf;border-radius:8px;padding:9px;text-align:center}.bar{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px}.bar>*{flex:1}.section-title{display:flex;align-items:center;gap:8px;font-weight:800;font-size:16px;margin-bottom:12px}.step{width:26px;height:26px;border-radius:8px;color:#152215;background:var(--mint);display:grid;place-items:center;font-weight:900;font-size:13px}.controls{display:grid;gap:12px}.upload{display:block;padding:13px 12px;background:#233b49;border:1px dashed #668594;border-radius:10px;cursor:pointer;text-align:center;font-weight:750;font-size:13px}.upload small{display:block;font-size:11px;color:#acc0cb;font-weight:400;margin-top:4px;line-height:1.4}.hidden{display:none!important}.file{position:absolute;opacity:0;width:1px;height:1px}.hint{color:var(--muted);font-size:12px;line-height:1.5;margin:7px 0}.meta{font-size:12px;color:var(--mint);overflow-wrap:anywhere;min-height:17px;margin-top:7px}button{cursor:pointer;border:1px solid #4c6677;background:#253e4c;border-radius:11px;padding:11px 9px;color:#f2f7fa;font:700 13px system-ui,Arial}button:disabled{opacity:.42;cursor:not-allowed}.accent{background:var(--mint);border-color:var(--mint);color:#163012}.danger{background:#9c4352;border-color:#c56468}.row{display:grid;grid-template-columns:1fr 1fr;gap:7px}label.field{display:block;font-size:12px;color:#dae8ed;font-weight:700}label.field span{float:right;color:var(--mint)}input[type=range]{accent-color:var(--mint);width:100%;margin-top:9px}.mini{font-size:11px;color:#a7becb}.tick{background:#1d3340;border:1px solid #344e59;padding:10px;border-radius:10px;font-size:12px;line-height:1.5}.tick strong{color:#dbffb6}#message{font-size:12px;background:#1b3441;color:#d3e7f0;padding:11px;border:1px solid #456576;border-radius:11px;line-height:1.5;margin-top:11px;overflow-wrap:anywhere}#result{display:none;margin-top:11px;text-align:center;color:#12311b;background:var(--mint);text-decoration:none;padding:13px;font-weight:850;border-radius:11px}.foot{font-size:12px;color:#849eae;line-height:1.55;border-top:1px solid var(--line);padding-top:14px;margin-top:20px}#busy{display:none;margin:9px 0;color:var(--mint);font-size:12px}.checkbox{display:flex;gap:7px;align-items:center;font-size:12px;color:#cddce2}input[type=checkbox]{accent-color:#b7ff90}
+@media(max-width:830px){.grid{grid-template-columns:1fr}.card.preview{max-width:500px;width:100%}.screen{max-height:59dvh}}@media(max-width:440px){main{padding:15px 9px 40px}header{padding:15px 10px}.card{padding:12px}.screen{max-height:56dvh}}
+</style></head><body>
+<header><h1>ПРИЗРАК <em>СТЫК</em></h1><span class="beta">MVP 0.1 · БЕЗ ИИ</span></header>
+<main><p class="subtitle"><b>Два клипа → один аккуратный переход.</b> Загрузи фрагменты из галереи (включая Veo) или сними их камерой. Последний кадр первого становится «призраком» для второго. Попробуй автоматический поиск визуально похожих кадров, сравни и собери короткий ролик.</p>
+<div class="grid"><div class="card preview">
+<div class="section-title">Предпросмотр <span style="color:#9fb4bf;font-size:11px;font-weight:400;margin-left:auto" id="where">Ожидание</span></div>
+<div class="screen" id="stage"><video id="display" muted playsinline preload="auto"></video><video id="camera" muted autoplay playsinline></video><img id="ghost" alt="Призрачный кадр"><div class="guide" id="guide"></div><div class="empty" id="empty">Загрузи первый клип<br>или включи камеру</div><div class="status" id="stageStatus">Призрак виден только при съёмке и сравнении</div></div>
+<div class="bar"><button id="previewA">▶ Первый</button><button id="previewB">👻 Совместить</button><button id="previewJoin" class="accent">▶ Проверить стык</button></div>
+<div id="message" role="status">Начни с первого клипа. Никакие материалы не отправляются на сервер.</div>
+<div id="busy"></div><a id="result" download="ghost-cut.webm">↓ Скачать склеенный ролик</a></div>
+<div class="controls">
+<div class="card"><div class="section-title"><span class="step">1</span> Первый клип</div>
+<label class="upload" for="fileA">↑ Загрузить видео из галереи<small>Видео, где заканчивается первое действие</small></label><input class="file" id="fileA" type="file" accept="video/*">
+<div class="meta" id="metaA">Нет видео</div>
+<div class="row" style="margin-top:10px"><button id="cameraOn">📷 Включить камеру</button><button id="flip">↻ Сменить камеру</button></div>
+<div class="row" style="margin-top:7px"><button id="recordA">● Снять первый клип</button><button id="recordB" disabled>● Снять второй клип</button></div>
+<button id="stopRecord" class="danger hidden" style="width:100%;margin-top:7px">■ Остановить запись</button>
+<p class="hint">Можно не снимать себя: оба клипа разрешено загрузить готовыми. Съёмка — для тех, кому нужен переход с камерой.</p>
+</div>
+<div class="card"><div class="section-title"><span class="step">2</span> Второй клип</div>
+<label class="upload" for="fileB">↑ Загрузить второй ролик<small>Например, продолжение нейросетевого видео или новый дубль</small></label><input class="file" id="fileB" type="file" accept="video/*">
+<div class="meta" id="metaB">Нет видео</div>
+<p class="hint">Нажми «Совместить», чтобы увидеть последний выбранный кадр первого ролика поверх начала второго.</p>
+</div>
+<div class="card"><div class="section-title"><span class="step">3</span> Совместить кадры</div>
+<label class="field">Где закончить первый <span id="timeALabel">—</span><input id="timeA" type="range" min="0" max="1" step="0.05" value="1" disabled></label>
+<label class="field">Откуда начать второй <span id="timeBLabel">—</span><input id="timeB" type="range" min="0" max="1" step="0.05" value="0" disabled></label>
+<label class="field">Прозрачность призрака <span id="opacityLabel">48%</span><input id="opacity" type="range" min="0" max="100" value="48"></label>
+<label class="checkbox"><input id="gridToggle" type="checkbox" checked> Показывать линии совмещения</label>
+<button id="auto" style="width:100%;margin-top:12px" disabled>⌁ Найти похожий стык без ИИ</button>
+<p class="hint">Алгоритм сравнивает цвет и расположение светлых/тёмных областей в кадрах. Он не понимает людей и объекты, поэтому выбор нужно проверить глазами.</p>
+</div>
+<div class="card"><div class="section-title"><span class="step">4</span> Собрать результат</div>
+<div class="tick">Мы возьмём до <strong>8 секунд первого</strong> клипа перед выбранным стыком и до <strong>8 секунд второго</strong> после него. Призрак в готовом видео не появится.</div>
+<button id="export" class="accent" style="width:100%;margin-top:12px" disabled>✦ Склеить и скачать видео</button>
+<p class="hint">В этой первой версии экспорт — WebM без исходного звука, до 16 секунд. Музыку, MP4, таймлайн и маски добавим только после проверки пользы. На Android лучше Chrome.</p>
+</div></div></div>
+<p class="foot">Это эксперимент, а не полноценный редактор. Работает локально: загрузка файлов остаётся в браузере. Для камеры требуется HTTPS. Авторские права на исходные ролики и музыку остаются за их владельцами. HTML проверяет механику; финальная версия планируется как Android APK с нативной камерой и экспортом MP4.</p></main>
+<video id="sourceA" muted playsinline preload="auto" style="display:none"></video><video id="sourceB" muted playsinline preload="auto" style="display:none"></video>
+<script>
+(function(){
+'use strict';
+const el=id=>document.getElementById(id);
+const live=el('camera'),view=el('display'),g=el('ghost'),A=el('sourceA'),B=el('sourceB');
+const s={a:null,b:null,camera:null,face:'environment',rec:null,recFor:null,chunks:[],cutA:0,cutB:0,mode:'idle',ghostData:null,exportURL:null,refGeneration:0,lock:false};
+const say=t=>{el('message').textContent=t};
+const busy=t=>{el('busy').style.display=t?'block':'none';el('busy').textContent=t||''};
+const stamp=t=>(Number.isFinite(t)?t:0).toFixed(2)+' с';
+const mime=()=>{const candidates=['video/webm;codecs=vp8','video/webm;codecs=vp9','video/webm','video/mp4'];return candidates.find(m=>window.MediaRecorder&&MediaRecorder.isTypeSupported(m))||''};
+const wait=ms=>new Promise(r=>setTimeout(r,ms));
+const getInfo=(v)=>new Promise((resolve,reject)=>{if(v.readyState>=1&&Number.isFinite(v.duration)&&v.duration>0){resolve();return;}const timeout=setTimeout(()=>reject(new Error('Видео не загрузилось')),16000);v.addEventListener('loadedmetadata',()=>{clearTimeout(timeout);resolve()},{once:true});v.addEventListener('error',()=>{clearTimeout(timeout);reject(new Error('Неподдерживаемый видеофайл'))},{once:true});});
+function updateButtons(){
+ el('timeA').disabled=!s.a;el('timeB').disabled=!s.b;el('auto').disabled=!(s.a&&s.b)||s.lock;
+ el('export').disabled=!(s.a&&s.b)||s.lock;el('recordB').disabled=!s.a||s.lock;
+ el('recordA').disabled=s.lock;el('recordB').disabled=!s.a||s.lock;
+ el('previewA').disabled=!s.a||s.lock;el('previewB').disabled=!(s.a&&(s.b||s.camera))||s.lock;
+ el('previewJoin').disabled=!(s.a&&s.b)||s.lock;
+}
+function updateSliders(){
+ el('timeALabel').textContent=s.a?stamp(s.cutA):'—';el('timeBLabel').textContent=s.b?stamp(s.cutB):'—';
+}
+function mediaShow(kind){
+ s.mode=kind;
+ const showCam=kind==='camera',showView=kind==='view';
+ live.style.display=showCam?'block':'none';view.style.display=showView?'block':'none';
+ el('empty').style.display=showCam||showView?'none':'block';
+ el('where').textContent=showCam?'Живая камера':showView?'Загруженное видео':'Ожидание';
+}
+async function cameraStart(){
+ if(s.lock)return;
+ if(!navigator.mediaDevices?.getUserMedia){say('API камеры недоступен. Нужен Chrome и HTTPS. Для теста можно загрузить оба видео без камеры.');return;}
+ try{
+  if(s.camera){s.camera.getTracks().forEach(x=>x.stop());s.camera=null;}
+  const stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:s.face},width:{ideal:1280},height:{ideal:720}},audio:false});
+  s.camera=stream;live.srcObject=stream;await live.play();view.pause();mediaShow('camera');
+  await refreshGhost();
+  g.style.display=s.a?'block':'none';updateButtons();say('Камера включена. Можно снять первый дубль, а после него — второй по прозрачному кадру.');
+ }catch(e){say('Ошибка камеры: '+(e.name||'')+' '+(e.message||'')+'. Можно работать с готовыми файлами.');}
+}
+function loadClip(which,file){
+ return new Promise(async(resolve,reject)=>{
+  if(!file||!file.type.startsWith('video/')){reject(new Error('Выбери видеофайл'));return;}
+  const old=s[which];if(old?.url)URL.revokeObjectURL(old.url);
+  const url=URL.createObjectURL(file);const obj={file,url,duration:0};s[which]=obj;
+  const v=which==='a'?A:B;v.pause();v.src=url;v.load();
+  try{
+   await getInfo(v);obj.duration=v.duration;
+   if(which==='a'){
+    s.cutA=Math.max(0.05,v.duration-0.08);el('timeA').min='0.05';el('timeA').max=String(s.cutA);el('timeA').step='0.05';el('timeA').value=String(s.cutA);
+    el('metaA').textContent=file.name+' · '+stamp(v.duration);el('recordB').disabled=false;
+    await refreshGhost();
+   }else{
+    s.cutB=0;el('timeB').min='0';el('timeB').max=String(Math.max(0,v.duration-0.10));el('timeB').step='0.05';el('timeB').value='0';
+    el('metaB').textContent=file.name+' · '+stamp(v.duration);
+   }
+   updateSliders();updateButtons();say('Видео '+(which==='a'?'№1':'№2')+' загружено. Настрой точку перехода и сравни кадры.');
+   if(which==='b')await compare();resolve();
+  }catch(e){URL.revokeObjectURL(url);s[which]=null;v.removeAttribute('src');v.load();updateButtons();say('Не удалось прочитать видео: '+e.message+'. Лучше использовать MP4 H.264 или WebM.');reject(e);}
+ });
+}
+function canvasFrame(v,w=540,h=960){
+ const c=document.createElement('canvas');c.width=w;c.height=h;const ctx=c.getContext('2d',{willReadFrequently:true});
+ drawCover(ctx,v,w,h);return c;
+}
+function drawCover(ctx,v,w,h){
+ if(v.readyState<2||!v.videoWidth)return;
+ const rw=w/h,rv=v.videoWidth/v.videoHeight;let sx=0,sy=0,sw=v.videoWidth,sh=v.videoHeight;
+ if(rv>rw){sw=v.videoHeight*rw;sx=(v.videoWidth-sw)/2;}else{sh=v.videoWidth/rw;sy=(v.videoHeight-sh)/2;}
+ ctx.drawImage(v,sx,sy,sw,sh,0,0,w,h);
+}
+async function seek(v,t){
+ if(v.readyState<1)await getInfo(v);
+ const target=Math.max(0,Math.min(t,Math.max(0,v.duration-0.03)));
+ v.pause();
+ if(Math.abs(v.currentTime-target)<0.025&&v.readyState>=2)return;
+ await new Promise((resolve,reject)=>{
+  const timer=setTimeout(()=>{cleanup();reject(new Error('Не удалось перейти к кадру'))},7500);
+  function cleanup(){clearTimeout(timer);v.removeEventListener('seeked',ok);v.removeEventListener('error',err);}
+  function ok(){cleanup();resolve()}function err(){cleanup();reject(new Error('Ошибка декодирования кадра'))}
+  v.addEventListener('seeked',ok);v.addEventListener('error',err);
+  try{v.currentTime=target;}catch(e){cleanup();reject(e);}
+ });
+ if(v.readyState<2){await new Promise(resolve=>{const to=setTimeout(resolve,1200);v.addEventListener('loadeddata',()=>{clearTimeout(to);resolve()},{once:true});});}
+}
+async function refreshGhost(){
+ if(!s.a){g.style.display='none';return;}
+ const ticket=++s.refGeneration;
+ try{await seek(A,s.cutA);if(ticket!==s.refGeneration)return;const c=canvasFrame(A,360,640);s.ghostData=c.toDataURL('image/jpeg',.85);g.src=s.ghostData;g.style.display=s.mode==='camera'||s.mode==='view'?'block':'none';}
+ catch(e){say('Не удалось извлечь кадр для призрака: '+e.message);}
+}
+function applyOpacity(){g.style.opacity=Number(el('opacity').value)/100;el('opacityLabel').textContent=el('opacity').value+'%'}
+async function compare(){
+ if(!s.a)return;
+ view.pause();if(s.b){
+  view.src=s.b.url;view.muted=true;view.load();await getInfo(view);await seek(view,s.cutB);mediaShow('view');
+ }else if(s.camera){mediaShow('camera');}
+ else{view.src=s.a.url;view.load();await getInfo(view);await seek(view,s.cutA);mediaShow('view');}
+ await refreshGhost();g.style.display='block';el('stageStatus').textContent='Совмести формы, положение и масштаб перед стыком';
+}
+function selectFirst(){
+ if(!s.a)return;
+ view.pause();view.src=s.a.url;view.load();getInfo(view).then(async()=>{await seek(view,s.cutA);mediaShow('view');g.style.display='none';el('stageStatus').textContent='Первый клип в точке перехода';}).catch(e=>say(e.message));
+}
+function recordButton(which){
+ if(!s.camera){say('Сначала включи камеру. Или загрузи видео из галереи.');return;}
+ if(which==='b'&&!s.a){say('Сначала запиши или загрузи первый клип.');return;}
+ if(s.rec)return;
+ const mt=mime();if(!mt){say('Этот браузер не поддерживает видеозапись. Попробуй Chrome Android.');return;}
+ s.lock=true;updateButtons();s.recFor=which;s.chunks=[];mediaShow('camera');g.style.display=which==='b'?'block':'none';
+ const rec=new MediaRecorder(s.camera,mt?{mimeType:mt,videoBitsPerSecond:2700000}:undefined);s.rec=rec;
+ rec.ondataavailable=e=>{if(e.data?.size)s.chunks.push(e.data)};
+ rec.onerror=e=>say('Ошибка записи: '+(e.error?.message||'MediaRecorder'));
+ rec.onstop=async()=>{
+  const blob=new Blob(s.chunks,{type:rec.mimeType||'video/webm'});s.rec=null;s.lock=false;el('stopRecord').classList.add('hidden');updateButtons();
+  if(!blob.size){say('Браузер не сохранил видеоданные.');return;}
+  const file=new File([blob],'dubль-'+which+'.'+(blob.type.includes('mp4')?'mp4':'webm'),{type:blob.type});
+  try{await loadClip(which,file);if(which==='a'){mediaShow('camera');await refreshGhost();g.style.display='block';say('Первый дубль записан! Теперь поставь руки или предмет в положение «призрака» и нажми «Снять второй клип».');}}
+  catch(e){say('Видео записалось, но браузер не смог его прочитать: '+e.message);}
+ };
+ try{rec.start(300);el('stopRecord').classList.remove('hidden');el('stageStatus').textContent='● Идёт запись '+(which==='a'?'первого':'второго')+' дубля';say('Снимаем. Призрак не записывается внутрь видео. Нажми «Остановить запись».');setTimeout(()=>{if(s.rec===rec&&rec.state==='recording')rec.stop()},12000);}
+ catch(e){s.rec=null;s.lock=false;updateButtons();say('Не удалось запустить запись: '+e.message);}
+}
+function sig(v){
+ const c=canvasFrame(v,24,42);const p=c.getContext('2d').getImageData(0,0,24,42).data;const out=new Float32Array(24*42*3);
+ for(let i=0,j=0;i<p.length;i+=4){out[j++]=p[i]/255;out[j++]=p[i+1]/255;out[j++]=p[i+2]/255;}
+ return out;
+}
+function difference(x,y){
+ let total=0;for(let i=0;i<x.length;i+=3){
+  let a=(.3*x[i]+.59*x[i+1]+.11*x[i+2]),b=(.3*y[i]+.59*y[i+1]+.11*y[i+2]);
+  total+=.75*Math.abs(a-b)+.25*(Math.abs(x[i]-y[i])+Math.abs(x[i+1]-y[i+1])+Math.abs(x[i+2]-y[i+2]))/3;
+ }return total/(x.length/3);
+}
+async function autoMatch(){
+ if(!s.a||!s.b||s.lock)return;
+ s.lock=true;updateButtons();busy('Анализируем небольшие кадры. Это обычное сравнение пикселей, без ИИ…');
+ try{
+  const tsA=[],tsB=[];
+  for(let j=0;j<6;j++){const t=Math.max(.05,s.a.duration-.08-j*.45);if(!tsA.some(x=>Math.abs(x-t)<.09))tsA.push(t);}
+  for(let j=0;j<6;j++){const t=Math.min(Math.max(0,s.b.duration-.06),j*.45);if(!tsB.some(x=>Math.abs(x-t)<.09))tsB.push(t);}
+  const fa=[],fb=[];for(const t of tsA){await seek(A,t);fa.push({t,s:sig(A)})}
+  for(const t of tsB){await seek(B,t);fb.push({t,s:sig(B)})}
+  let best={distance:Infinity,a:0,b:0};
+  for(const x of fa)for(const y of fb){const d=difference(x.s,y.s);if(d<best.distance)best={distance:d,a:x.t,b:y.t}}
+  s.cutA=best.a;s.cutB=best.b;el('timeA').value=String(s.cutA);el('timeB').value=String(s.cutB);updateSliders();
+  await compare();say('Предложен наиболее похожий стык из '+(fa.length*fb.length)+' сравнений: '+stamp(best.a)+' → '+stamp(best.b)+'. Важно: алгоритм сравнивает только общую картинку. Проверь переход глазами.');
+ }catch(e){say('Автоподбор не удался: '+e.message+'. Подвинь точки стыка вручную.');}
+ finally{s.lock=false;updateButtons();busy('');}
+}
+async function playUntil(v,start,end,onFrame){
+ await seek(v,start);await v.play();
+ await new Promise((resolve,reject)=>{
+  let stopped=false;let raf=0;
+  function done(error){if(stopped)return;stopped=true;cancelAnimationFrame(raf);v.pause();error?reject(error):resolve();}
+  const startWall=performance.now();
+  function tick(){if(v.readyState>=2)onFrame();if(v.currentTime>=end-.022||v.ended||performance.now()-startWall>(end-start+3)*1000){done();return;}raf=requestAnimationFrame(tick)}
+  tick();
+ });
+}
+async function playJoin(){
+ if(!s.a||!s.b||s.lock)return;
+ s.lock=true;updateButtons();g.style.display='none';el('stageStatus').textContent='Предпросмотр стыка (без музыки)';
+ try{
+  view.src=s.a.url;view.load();await getInfo(view);mediaShow('view');
+  await playUntil(view,Math.max(0,s.cutA-3),s.cutA,()=>{});
+  view.src=s.b.url;view.load();await getInfo(view);await playUntil(view,s.cutB,Math.min(s.b.duration-.06,s.cutB+3),()=>{});
+  say('Предпросмотр закончен. Если кадры скачут, изменяй точки на ползунках или пересними второй дубль.');
+ }catch(e){say('Не удалось показать переход: '+e.message)}
+ finally{s.lock=false;updateButtons();}
+}
+async function exportJoined(){
+ if(!s.a||!s.b||s.lock)return;
+ if(!window.MediaRecorder||!HTMLCanvasElement.prototype.captureStream){say('Экспорт видео не поддерживается браузером. Нужен Chrome Android.');return;}
+ s.lock=true;updateButtons();busy('Готовим видео. Не закрывай вкладку до появления ссылки для скачивания.');
+ const c=document.createElement('canvas');c.width=360;c.height=640;const ctx=c.getContext('2d',{alpha:false});
+ const stream=c.captureStream(24);const chunks=[];let raf=0,rec=null;
+ try{
+  const mt=mime();if(!mt)throw new Error('Нет подходящего видеокодека');
+  await seek(A,Math.max(0,s.cutA-8));await seek(B,s.cutB);
+  rec=new MediaRecorder(stream,{mimeType:mt,videoBitsPerSecond:2200000});
+  rec.ondataavailable=e=>{if(e.data?.size)chunks.push(e.data)};
+  const endP=new Promise((resolve,reject)=>{rec.onstop=resolve;rec.onerror=e=>reject(e.error||new Error('Ошибка кодирования'))});
+  let active=A;
+  function draw(){ctx.fillStyle='#07121c';ctx.fillRect(0,0,c.width,c.height);drawCover(ctx,active,c.width,c.height);raf=requestAnimationFrame(draw)}
+  draw();rec.start(250);busy('Кодируем первую часть…');
+  await playUntil(A,Math.max(0,s.cutA-8),s.cutA,()=>{});
+  active=B;busy('Кодируем вторую часть…');
+  await playUntil(B,s.cutB,Math.min(s.b.duration-.045,s.cutB+8),()=>{});
+  rec.stop();await endP;cancelAnimationFrame(raf);stream.getTracks().forEach(t=>t.stop());
+  const blob=new Blob(chunks,{type:rec.mimeType||'video/webm'});
+  if(!blob.size)throw new Error('Получился пустой файл');
+  if(s.exportURL)URL.revokeObjectURL(s.exportURL);s.exportURL=URL.createObjectURL(blob);
+  const a=el('result');a.href=s.exportURL;a.download='ghost-cut-'+Date.now()+'.'+(blob.type.includes('mp4')?'mp4':'webm');a.style.display='block';
+  say('Готово! Два фрагмента соединены. Открой скачанный файл и проверь плавность перехода. Экспорт пока без звука.');
+ }catch(e){
+  cancelAnimationFrame(raf);try{if(rec&&rec.state!=='inactive')rec.stop()}catch(_){}
+  stream.getTracks().forEach(t=>t.stop());say('Ошибка экспорта: '+(e.message||e)+'. Попробуй более короткие видео в MP4 H.264.');
+ }finally{s.lock=false;updateButtons();busy('');}
+}
+el('fileA').onchange=async e=>{if(e.target.files[0])try{await loadClip('a',e.target.files[0])}catch(_){ }e.target.value=''};
+el('fileB').onchange=async e=>{if(e.target.files[0])try{await loadClip('b',e.target.files[0])}catch(_){ }e.target.value=''};
+el('cameraOn').onclick=cameraStart;el('flip').onclick=()=>{if(s.rec)return;s.face=s.face==='environment'?'user':'environment';cameraStart()};
+el('recordA').onclick=()=>recordButton('a');el('recordB').onclick=()=>recordButton('b');el('stopRecord').onclick=()=>{if(s.rec&&s.rec.state!=='inactive')s.rec.stop()};
+el('previewA').onclick=selectFirst;el('previewB').onclick=()=>compare().catch(e=>say(e.message));
+el('previewJoin').onclick=playJoin;el('auto').onclick=autoMatch;el('export').onclick=exportJoined;
+el('opacity').oninput=applyOpacity;el('gridToggle').onchange=()=>el('guide').style.display=el('gridToggle').checked?'':'none';
+let refTimer=null;el('timeA').oninput=e=>{s.cutA=Number(e.target.value);updateSliders();clearTimeout(refTimer);refTimer=setTimeout(()=>refreshGhost(),160)};
+el('timeB').oninput=e=>{s.cutB=Number(e.target.value);updateSliders();if(s.b)compare().catch(err=>say(err.message))};
+window.addEventListener('pagehide',()=>{if(s.rec&&s.rec.state!=='inactive')try{s.rec.stop()}catch(_){};if(s.camera)s.camera.getTracks().forEach(t=>t.stop());for(const item of [s.a,s.b])if(item)URL.revokeObjectURL(item.url);if(s.exportURL)URL.revokeObjectURL(s.exportURL)});
+applyOpacity();updateButtons();
+})();
+</script></body></html>
