@@ -53,6 +53,10 @@ footer{color:#8ba3b9;font-size:12px;line-height:1.55;margin-top:17px;border-top:
 <div id="hint">Включи камеру и выбери образец</div><div id="countdown"></div></div>
 <div class="buttons"><button id="startCam" class="primary">📷 Включить селфи</button><button id="flipCam">↻ Переключить камеру</button><button id="preview">▶ Смотреть образец</button><button id="reset">⌖ Сброс совмещения</button></div>
 <div class="buttons"><button id="start" class="primary">● Снять и собрать ролик</button><button id="stop" class="danger" disabled>■ Завершить</button></div>
+<div class="buttons"><button id="photoShot" class="primary" disabled>📸 Повторить фото</button><button id="comparePhoto" disabled>▣ До/после</button></div>
+<a id="downloadPhoto" download="ghost-photo.jpg" style="display:none;text-align:center;background:#24394c;color:#e7f5ff;padding:12px;margin-top:10px;border-radius:12px;text-decoration:none">↓ Скачать фото (JPG)</a>
+<a id="downloadCompare" download="ghost-compare.jpg" style="display:none;text-align:center;background:#24394c;color:#e7f5ff;padding:12px;margin-top:6px;border-radius:12px;text-decoration:none">↓ Скачать коллаж образец / результат</a>
+<img id="photoResult" alt="Фото после повторения" style="display:none;width:100%;max-height:50dvh;object-fit:contain;margin-top:12px;border-radius:12px">
 <a id="download" download="ghost-reel.webm">↓ Скачать готовый ролик</a><video id="outVideo" controls playsinline></video>
 <div id="message" role="status">Выбери файл-референс. Можно использовать готовое видео, фотографии или несколько фото — тогда получится последовательность поз.</div>
 </div>
@@ -61,7 +65,7 @@ footer{color:#8ba3b9;font-size:12px;line-height:1.55;margin-top:17px;border-top:
 <input id="reference" class="file" type="file" accept="image/*,video/*" multiple><div class="meta" id="refMeta">Ничего не выбрано</div>
 <div id="photoControls"><div class="row"><button id="prevPhoto">← Предыдущая</button><button id="nextPhoto">Следующая →</button></div>
 <label class="field">Секунд на каждую позу <strong id="poseTimeLabel">3 с</strong><input id="poseTime" type="range" min="2" max="6" value="3" step="1"></label>
-<p class="note">Во время записи приложение будет переключать фото автоматически. На переходе добавляется короткая вспышка для монтажа.</p></div>
+<p class="note">Для фото: выбери образец, включи селфи и нажми «📸 Повторить фото» под камерой. Для нескольких фото можно также записать ролик с переходами.</p></div>
 <div class="strip"><span class="pill">Видеотренд</span><span class="pill">Повтори позу</span><span class="pill">Фотоколлаж</span></div></section>
 <section class="card"><div class="hd"><span class="index">2</span> Совмести себя с образцом</div>
 <label class="field">Прозрачность призрака <strong id="opacityLabel">48%</strong><input id="opacity" type="range" min="5" max="95" value="48"></label>
@@ -84,7 +88,7 @@ footer{color:#8ba3b9;font-size:12px;line-height:1.55;margin-top:17px;border-top:
 (function(){
 'use strict';
 const $=id=>document.getElementById(id),cam=$('camera'),rv=$('ghostVideo'),ri=$('ghostImg'),music=$('music'),stage=$('stage');
-const state={face:'user',stream:null,refType:'',refURLs:[],refFiles:[],refImages:[],photoIndex:0,videoDuration:0,musicURL:null,dragX:0,dragY:0,scale:1,mirror:false,recording:false,starting:false,recorder:null,frames:[],outURL:null,animationId:0,interval:null,elapsedStart:0,refStarted:false,audioCtx:null,audioRef:null,audioMusic:null,audioDest:null,refGain:null,musicGain:null,doneTimer:null};
+const state={face:'user',stream:null,refType:'',refURLs:[],refFiles:[],refImages:[],photoIndex:0,videoDuration:0,musicURL:null,dragX:0,dragY:0,scale:1,mirror:false,recording:false,starting:false,recorder:null,frames:[],outURL:null,animationId:0,interval:null,elapsedStart:0,refStarted:false,audioCtx:null,audioRef:null,audioMusic:null,audioDest:null,refGain:null,musicGain:null,doneTimer:null,photoURL:null,compareURL:null,photoBusy:false,showCompare:false};
 const say=t=>$('message').textContent=t;const wait=t=>new Promise(r=>setTimeout(r,t));const hint=t=>$('hint').textContent=t;
 function refresh(){
  $('opacityLabel').textContent=$('opacity').value+'%';$('scaleLabel').textContent=$('scale').value+'%';
@@ -99,6 +103,11 @@ function showPhoto(index){
  $('refMeta').textContent=(state.photoIndex+1)+'/'+state.refImages.length+' · '+state.refFiles[state.photoIndex].name;
  $('stepTag').textContent='Поза '+(state.photoIndex+1)+'/'+state.refImages.length;
  $('stepTag').style.display='block';
+}
+function clearPhotos(){
+ for(const k of ['photoURL','compareURL']){if(state[k])URL.revokeObjectURL(state[k]);state[k]=null}
+ $('downloadPhoto').style.display='none';$('downloadCompare').style.display='none';$('photoResult').style.display='none';
+ $('photoResult').removeAttribute('src');state.showCompare=false;
 }
 function cleanupRefs(){
  rv.pause();rv.removeAttribute('src');rv.load();ri.removeAttribute('src');ri.style.display='none';
@@ -115,7 +124,7 @@ function mediaReady(v){
 }
 async function loadRef(files){
  if(state.recording||state.starting||!files.length)return;
- cleanupRefs();
+ clearPhotos();cleanupRefs();
  const video=files.find(x=>x.type.startsWith('video/'));
  const photos=files.filter(x=>x.type.startsWith('image/')).slice(0,12);
  try{
@@ -141,7 +150,9 @@ async function loadRef(files){
 }
 function updateControls(){
  const busy=state.recording||state.starting;
- $('start').disabled=!state.stream||!state.refType||busy;
+ $('start').disabled=!state.stream||!state.refType||busy||state.photoBusy;
+ $('photoShot').disabled=!state.stream||state.refType!=='photos'||busy||state.photoBusy;
+ $('comparePhoto').disabled=!state.compareURL||busy||state.photoBusy;
  $('stop').disabled=!state.recording;
  $('preview').disabled=!state.refType||busy;
  $('startCam').disabled=busy;$('flipCam').disabled=busy;$('reference').disabled=busy;$('track').disabled=busy;
@@ -227,6 +238,33 @@ async function countdown(){
  $('countdown').textContent='СНИМАЕМ';await wait(350);$('countdown').style.display='none';
 }
 function photoLength(){return state.refImages.length*Number($('poseTime').value)*1000;}
+function jpeg(c){return new Promise((res,rej)=>c.toBlob(b=>b?res(b):rej(Error('JPG не создался')),'image/jpeg',.9))}
+function photoURL(k,b){if(state[k])URL.revokeObjectURL(state[k]);state[k]=URL.createObjectURL(b)}
+async function takePhoto(){
+ if(state.photoBusy||state.starting||state.recording)return;
+ if(!state.stream||state.refType!=='photos'){say('Загрузи фото и включи камеру');return}
+ state.photoBusy=true;updateControls();clearPhotos();
+ try{
+  await countdown();
+  if(!cam.videoWidth)throw Error('Нет изображения с камеры');
+  const c=document.createElement('canvas');c.width=720;c.height=1280;
+  const ctx=c.getContext('2d',{alpha:false});ctx.fillStyle='#0b1020';ctx.fillRect(0,0,720,1280);
+  videoCover(ctx,cam,720,1280,state.face==='user',sourceFilter());
+  photoURL('photoURL',await jpeg(c));
+  const d=document.createElement('canvas');d.width=720;d.height=640;
+  const x=d.getContext('2d',{alpha:false});x.fillStyle='#0b1020';x.fillRect(0,0,720,640);
+  x.save();x.beginPath();x.rect(0,0,360,640);x.clip();imageCover(x,state.refImages[state.photoIndex],360,640);x.restore();
+  x.save();x.beginPath();x.rect(360,0,360,640);x.clip();x.drawImage(c,360,0,360,640);x.restore();
+  x.fillStyle='#071320db';x.fillRect(0,590,720,50);x.fillStyle='#fff';x.font='bold 17px system-ui';x.textAlign='center';
+  x.fillText('ОБРАЗЕЦ',180,622);x.fillText('ТВОЙ КАДР',540,622);
+  photoURL('compareURL',await jpeg(d));
+  $('photoResult').src=state.photoURL;$('photoResult').style.display='block';
+  $('downloadPhoto').href=state.photoURL;$('downloadPhoto').style.display='block';
+  $('downloadCompare').href=state.compareURL;$('downloadCompare').style.display='block';
+  state.showCompare=false;say('Снимок готов! Скачай фото или коллаж «образец / результат». Призрак в итоговый кадр не попал.');
+ }catch(e){say('Не получилось сделать фото: '+(e.message||e))}
+ finally{state.photoBusy=false;$('countdown').style.display='none';updateControls()}
+}
 async function shoot(){
  if(state.recording||state.starting)return;
  if(!state.stream||!state.refType){say('Сначала включи камеру и загрузи референс.');return;}
@@ -325,7 +363,12 @@ $('preview').onclick=async()=>{
   else{rv.pause();say('Образец остановлен.');}
  }else if(state.refType==='photos'){showPhoto(state.photoIndex+1);}
 };
-$('start').onclick=shoot;$('stop').onclick=stopRecording;
+$('start').onclick=shoot;$('stop').onclick=stopRecording;$('photoShot').onclick=takePhoto;
+$('comparePhoto').onclick=()=>{
+ if(!state.compareURL)return;state.showCompare=!state.showCompare;
+ $('photoResult').src=state.showCompare?state.compareURL:state.photoURL;
+ $('comparePhoto').textContent=state.showCompare?'▣ Только фото':'▣ До/после';
+};
 $('prevPhoto').onclick=()=>showPhoto(state.photoIndex-1);$('nextPhoto').onclick=()=>showPhoto(state.photoIndex+1);
 ['opacity','scale','poseTime'].forEach(id=>$(id).addEventListener('input',()=>{state.scale=Number($('scale').value)/100;refresh()}));
 $('mirror').onclick=()=>{state.mirror=!state.mirror;refresh()};
@@ -336,7 +379,7 @@ stage.addEventListener('pointermove',e=>{if(!drag||e.pointerId!==drag.id)return;
 stage.addEventListener('pointerup',()=>drag=null);stage.addEventListener('pointercancel',()=>drag=null);
 window.addEventListener('pagehide',()=>{
  if(state.recorder?.state==='recording')stopRecording();
- state.stream?.getTracks().forEach(t=>t.stop());cleanupRefs();
+ state.stream?.getTracks().forEach(t=>t.stop());clearPhotos();cleanupRefs();
  if(state.musicURL)URL.revokeObjectURL(state.musicURL);if(state.outURL)URL.revokeObjectURL(state.outURL);
 });
 refresh();updateControls();
