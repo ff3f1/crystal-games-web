@@ -6,8 +6,8 @@ android {
         applicationId 'ru.crystalgames.ghostreel'
         minSdk 26
         targetSdk 34
-        versionCode (project.findProperty('vCode') ?: '1').toString().toInteger()
-        versionName (project.findProperty('vName') ?: '1.0.0').toString()
+        versionCode = Integer.parseInt((project.findProperty('vCode') ?: '1').toString())
+        versionName = (project.findProperty('vName') ?: '1.0.0').toString()
     }
     signingConfigs {
         release {
