@@ -63,6 +63,9 @@ footer{color:#8ba3b9;font-size:12px;line-height:1.55;margin-top:17px;border-top:
 <div class="side"><section class="card"><div class="hd"><span class="index">1</span> Что повторяем?</div>
 <label class="fileLabel" for="reference">＋ Фото или видео из галереи<small>Одно видео с движениями, одно фото или несколько фотографий с позами. Можно загрузить собственный ИИ-ролик.</small></label>
 <input id="reference" class="file" type="file" accept="image/*,video/*" multiple><div class="meta" id="refMeta">Ничего не выбрано</div>
+<div class="row" style="margin-top:13px"><input id="refLink" inputmode="url" type="url" autocomplete="off" placeholder="https://…/video.mp4" aria-label="Ссылка на референс" style="width:100%;min-width:0;border-radius:10px;border:1px solid #4a6277;background:#192a40;color:white;padding:10px;font:12px system-ui"><button id="loadLink">↗ По ссылке</button></div>
+<button id="shareRef" style="width:100%;margin-top:8px" disabled>🔗 Поделиться образцом</button>
+<p class="note">Работают прямые HTTPS-ссылки на JPG, PNG, WebP, MP4 или WebM, если сервер разрешает доступ (CORS). Ссылки на страницы YouTube, VK или TikTok не подходят. Файл загружается временно в браузер, без сохранения в галерею.</p>
 <div id="photoControls"><div class="row"><button id="prevPhoto">← Предыдущая</button><button id="nextPhoto">Следующая →</button></div>
 <label class="field">Секунд на каждую позу <strong id="poseTimeLabel">3 с</strong><input id="poseTime" type="range" min="2" max="6" value="3" step="1"></label>
 <p class="note">Для фото: выбери образец, включи селфи и нажми «📸 Повторить фото» под камерой. Для нескольких фото можно также записать ролик с переходами.</p></div>
@@ -88,7 +91,7 @@ footer{color:#8ba3b9;font-size:12px;line-height:1.55;margin-top:17px;border-top:
 (function(){
 'use strict';
 const $=id=>document.getElementById(id),cam=$('camera'),rv=$('ghostVideo'),ri=$('ghostImg'),music=$('music'),stage=$('stage');
-const state={face:'user',stream:null,refType:'',refURLs:[],refFiles:[],refImages:[],photoIndex:0,videoDuration:0,musicURL:null,dragX:0,dragY:0,scale:1,mirror:false,recording:false,starting:false,recorder:null,frames:[],outURL:null,animationId:0,interval:null,elapsedStart:0,refStarted:false,audioCtx:null,audioRef:null,audioMusic:null,audioDest:null,refGain:null,musicGain:null,doneTimer:null,photoURL:null,compareURL:null,photoBusy:false,showCompare:false};
+const state={face:'user',stream:null,refType:'',refURLs:[],refFiles:[],refImages:[],photoIndex:0,videoDuration:0,musicURL:null,dragX:0,dragY:0,scale:1,mirror:false,recording:false,starting:false,recorder:null,frames:[],outURL:null,animationId:0,interval:null,elapsedStart:0,refStarted:false,audioCtx:null,audioRef:null,audioMusic:null,audioDest:null,refGain:null,musicGain:null,doneTimer:null,photoURL:null,compareURL:null,photoBusy:false,showCompare:false,linkedMediaURL:null,loadingLink:false};
 const say=t=>$('message').textContent=t;const wait=t=>new Promise(r=>setTimeout(r,t));const hint=t=>$('hint').textContent=t;
 function refresh(){
  $('opacityLabel').textContent=$('opacity').value+'%';$('scaleLabel').textContent=$('scale').value+'%';
@@ -122,9 +125,52 @@ function mediaReady(v){
   v.addEventListener('loadedmetadata',ok);v.addEventListener('error',bad);
  });
 }
+async function importLink(){
+ if(state.recording||state.starting||state.loadingLink)return;
+ let url;
+ try{
+  url=new URL($('refLink').value.trim());
+  if(url.protocol!=='https:')throw Error('Нужен HTTPS');
+  if(/(^|\.)(youtube\.com|youtu\.be|tiktok\.com|instagram\.com|vk\.com|vk\.ru|rutube\.ru)$/.test(url.hostname.toLowerCase()))throw Error('Это страница платформы, а не прямая ссылка на файл');
+ }catch(e){say('Ссылка не подходит: '+e.message);return;}
+ state.loadingLink=true;$('loadLink').disabled=true;
+ const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),45000);
+ say('Загружаю референс по ссылке в память браузера без сохранения в галерею…');
+ try{
+  const res=await fetch(url.href,{mode:'cors',signal:controller.signal});
+  if(!res.ok)throw Error('HTTP '+res.status);
+  const limit=65*1024*1024;
+  if(Number(res.headers.get('content-length')||0)>limit)throw Error('Файл больше 65 МБ');
+  const contentType=(res.headers.get('content-type')||'').split(';')[0].trim().toLowerCase();
+  const name=decodeURIComponent(url.pathname.split('/').pop()||'');
+  const ext=name.toLowerCase().split('.').pop();
+  const types={jpg:'image/jpeg',jpeg:'image/jpeg',png:'image/png',webp:'image/webp',mp4:'video/mp4',webm:'video/webm'};
+  const type=/^(image|video)\//.test(contentType)?contentType:types[ext];
+  if(!type)throw Error('Нужна прямая ссылка на JPG, PNG, WebP, MP4 или WebM');
+  const blob=await res.blob();
+  if(!blob.size||blob.size>limit)throw Error('Пустой или слишком большой файл (лимит 65 МБ)');
+  const file=new File([blob],/\.(jpe?g|png|webp|mp4|webm)$/i.test(name)?name:'reference.'+(type.startsWith('image/')?'jpg':'mp4'),{type});
+  await loadRef([file]);
+  if(!state.refType)throw Error('Не удалось открыть файл в браузере');
+  state.linkedMediaURL=url.href;
+  say('Призрак по ссылке готов! Включи камеру и повторяй. Кнопка «Поделиться образцом» отправит ссылку другу.');
+ }catch(e){
+  const reason=e.name==='AbortError'?'Превышено время загрузки':e instanceof TypeError?'Сервер не разрешает доступ из браузера (CORS) либо адрес недоступен':e.message;
+  say('Не получилось открыть ссылку: '+reason+'. Попробуй другой прямой файл или галерею.');
+ }finally{clearTimeout(timer);state.loadingLink=false;$('loadLink').disabled=false;updateControls();}
+}
+async function shareLink(){
+ if(!state.linkedMediaURL)return;
+ const url=new URL(location.href);url.searchParams.set('ref',state.linkedMediaURL);url.hash='';
+ try{
+  if(navigator.share){await navigator.share({title:'Повтори мой призрак',text:'Повтори фото или движение через Призрак REEL',url:url.href});return;}
+  if(navigator.clipboard?.writeText){await navigator.clipboard.writeText(url.href);say('Ссылка на образец скопирована. Отправь её другу.');return;}
+  window.prompt('Скопируй ссылку',url.href);
+ }catch(e){if(e.name!=='AbortError')say('Не получилось поделиться: '+e.message);}
+}
 async function loadRef(files){
  if(state.recording||state.starting||!files.length)return;
- clearPhotos();cleanupRefs();
+ clearPhotos();cleanupRefs();state.linkedMediaURL=null;
  const video=files.find(x=>x.type.startsWith('video/'));
  const photos=files.filter(x=>x.type.startsWith('image/')).slice(0,12);
  try{
@@ -151,6 +197,7 @@ async function loadRef(files){
 function updateControls(){
  const busy=state.recording||state.starting;
  $('start').disabled=!state.stream||!state.refType||busy||state.photoBusy;
+ $('shareRef').disabled=!state.linkedMediaURL||busy;
  $('photoShot').disabled=!state.stream||state.refType!=='photos'||busy||state.photoBusy;
  $('comparePhoto').disabled=!state.compareURL||busy||state.photoBusy;
  $('stop').disabled=!state.recording;
@@ -357,6 +404,8 @@ async function shoot(){
  }
 }
 $('reference').addEventListener('change',e=>{const arr=Array.from(e.target.files||[]);loadRef(arr);e.target.value='';});
+$('loadLink').onclick=importLink;$('shareRef').onclick=shareLink;
+$('refLink').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();importLink();}});
 $('track').addEventListener('change',e=>{
  const f=e.target.files?.[0];if(!f)return;
  music.pause();if(state.musicURL)URL.revokeObjectURL(state.musicURL);
@@ -389,6 +438,10 @@ window.addEventListener('pagehide',()=>{
  state.stream?.getTracks().forEach(t=>t.stop());clearPhotos();cleanupRefs();
  if(state.musicURL)URL.revokeObjectURL(state.musicURL);if(state.outURL)URL.revokeObjectURL(state.outURL);
 });
+try{
+ const shared=new URLSearchParams(location.search).get('ref');
+ if(shared&&/^https:\/\//i.test(shared)){$('refLink').value=shared;say('Тебе прислали образец! Нажми «↗ По ссылке», чтобы открыть его.');}
+}catch(_){}
 refresh();updateControls();
 })();
 </script></body></html>
