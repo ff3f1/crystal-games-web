@@ -87,6 +87,14 @@ body[data-page=studio] #landing{display:none}
 #shareResult{display:none;width:100%;margin-top:8px;background:#264358;border-color:#496f7f}
 @media(max-width:800px){.cover{grid-template-columns:1fr .9fr}.cover-title{padding:28px 22px}}
 @media(max-width:540px){.landing{padding:14px 11px 48px}.cover{display:block;min-height:340px}.cover-title{padding:26px 17px}.cover-title h1{font-size:43px;max-width:250px}.cover-title p{font-size:12px;max-width:210px}.cover-art{position:absolute;right:-24px;top:53px;width:63%;height:272px;opacity:.84}.cover-pill{bottom:24px;right:27px}.modeGrid{grid-template-columns:1fr;gap:8px}.mode-tile{display:grid;grid-template-columns:48px 1fr;column-gap:12px;min-height:95px;padding:12px}.mode-tile .ico{grid-row:span 2;margin:4px 0 0}.mode-tile strong{font-size:15px;margin:4px 0 3px}.mode-tile small{font-size:11px}.mode-tile .arrow{top:12px}.land-head{margin:20px 3px 10px}#studio{padding-top:12px}}
+
+#studio[data-mode=photo] #recordRow{display:none}
+#studio[data-mode=video] #photoRow,#studio[data-mode=series] #photoRow{display:none}
+#studio:not(.advanced) #preview,#studio:not(.advanced) #reset{display:none}
+#studio:not(.advanced) .side .card:first-of-type .row:not(:first-child){display:none}
+#studio .studio-heading{gap:12px}
+#studio #photoRow button:first-child{background:#bafd86;color:#162716}
+#studio:not(.advanced) #recordRow,#studio:not(.advanced) #photoRow{margin-top:8px}
 </style></head>
 <body data-page="home"><header><div class="logo"><span class="brand-mark">◉</span> ПРИЗРАК <b>REEL</b></div><button id="backHome">← Главная</button><span class="tiny">CREATOR STUDIO</span></header>
 <section id="landing" class="landing"><div class="cover"><div class="cover-title"><div class="eyebrow">КАМЕРА, КОТОРАЯ ПОМОГАЕТ</div><h1>УВИДЕЛ.<br><em>ПОВТОРИЛ.</em><br>СНЯЛ.</h1><p>Полупрозрачный образец прямо поверх камеры. Повтори кадр или движение и получи свой ролик со звуком.</p></div>
@@ -96,7 +104,7 @@ body[data-page=studio] #landing{display:none}
 <button id="modePhoto" class="mode-tile"><span class="ico">▣</span><strong>Повторить фото</strong><small>Совмести позу и сделай коллаж до / после</small><span class="arrow">↗</span></button>
 <button id="modeSeries" class="mode-tile"><span class="ico">▦</span><strong>Серия поз</strong><small>Несколько фото — ролик с переходами</small><span class="arrow">↗</span></button></div>
 <button id="startLink">↗ &nbsp; Открыть образец по прямой ссылке <span>→</span></button>
-<div class="land-note">Без регистрации и платного ИИ. Фото и видео остаются на устройстве. Используй только разрешённые материалы.</div></section>
+<div class="land-note">Без регистрации и платного ИИ. Фото и видео остаются на устройстве. Используй только разрешённые материалы. <a style="color:#bafd86" href="https://ff3f1.github.io/crystal-games-web/ghost-privacy.html">Конфиденциальность</a></div></section>
 <main id="studio"><div class="lead"><div class="over">СНИМАЙ ПО ОБРАЗЦУ · ПОЛУЧАЙ ГОТОВЫЙ РОЛИК</div>
 <h1>Повтори движения из видео<br>или позы с фотографий</h1><p>Загрузи референс, включи селфи-камеру, настрой прозрачность, выбери звук и нажми «Снять». Призрак направляет тебя во время съёмки; результат автоматически превращается в вертикальный ролик. Без серверов и без платных нейросетей.</p></div>
 <div class="studio-heading"><h2 id="studioTitle">Повторить видео</h2><span>● ЛОКАЛЬНО</span></div>
@@ -106,8 +114,8 @@ body[data-page=studio] #landing{display:none}
 <div id="gridGuide"></div><div id="rec">● REC <span id="clock">00:00</span></div><div id="stepTag"></div>
 <div id="hint">Включи камеру и выбери образец</div><div id="countdown"></div></div>
 <div class="buttons"><button id="startCam" class="primary">📷 Включить селфи</button><button id="flipCam">↻ Переключить камеру</button><button id="preview">▶ Смотреть образец</button><button id="reset">⌖ Сброс совмещения</button></div>
-<div class="buttons"><button id="start" class="primary">● Снять и собрать ролик</button><button id="stop" class="danger" disabled>■ Завершить</button></div>
-<div class="buttons"><button id="photoShot" class="primary" disabled>📸 Повторить фото</button><button id="comparePhoto" disabled>▣ До/после</button></div>
+<div class="buttons" id="recordRow"><button id="start" class="primary">● Снять и собрать ролик</button><button id="stop" class="danger" disabled>■ Завершить</button></div>
+<div class="buttons" id="photoRow"><button id="photoShot" class="primary" disabled>📸 Повторить фото</button><button id="comparePhoto" disabled>▣ До/после</button></div>
 <a id="downloadPhoto" download="ghost-photo.jpg" style="display:none;text-align:center;background:#24394c;color:#e7f5ff;padding:12px;margin-top:10px;border-radius:12px;text-decoration:none">↓ Скачать фото (JPG)</a>
 <a id="downloadCompare" download="ghost-compare.jpg" style="display:none;text-align:center;background:#24394c;color:#e7f5ff;padding:12px;margin-top:6px;border-radius:12px;text-decoration:none">↓ Скачать коллаж образец / результат</a>
 <img id="photoResult" alt="Фото после повторения" style="display:none;width:100%;max-height:50dvh;object-fit:contain;margin-top:12px;border-radius:12px">
@@ -249,6 +257,7 @@ async function loadRef(files){
  }catch(e){say('Не удалось загрузить образец: '+e.message+'. Попробуй MP4 (H.264) или JPEG/PNG.');cleanupRefs();updateControls();}
 }
 function updateControls(){
+ const studio=$('studio');if(studio&&state.refType)studio.dataset.mode=state.refType==='photos'?(state.refFiles.length>1?'series':'photo'):'video';
  const busy=state.recording||state.starting;
  $('start').disabled=!state.stream||!state.refType||busy||state.photoBusy;
  $('shareRef').disabled=!state.linkedMediaURL||busy;
@@ -498,7 +507,7 @@ try{
 }catch(_){}
 
 function goStudio(name){
- document.body.dataset.page='studio';
+ document.body.dataset.page='studio';$('studio').dataset.mode=state.want||'video';
  $('studioTitle').textContent=name||'Призрак REEL';
  window.scrollTo(0,0);
 }
