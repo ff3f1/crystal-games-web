@@ -268,16 +268,17 @@ async function takePhoto(){
 async function shoot(){
  if(state.recording||state.starting)return;
  if(!state.stream||!state.refType){say('Сначала включи камеру и загрузи референс.');return;}
- if(!window.MediaRecorder||!HTMLCanvasElement.prototype.captureStream){say('Браузер не поддерживает запись Canvas. Попробуй Chrome Android.');return;}
+ if(!window.MediaRecorder){say('Браузер не поддерживает MediaRecorder. Попробуй Chrome Android.');return;}
  state.starting=true;updateControls();resetOutput();
- let mixed=null,audioTrack=null,canvas=null,rec=null;
+ let mixed=null,audioTrack=null,canvas=null,rec=null,useDirect=false;
  try{
   audioTrack=await setupSound();
-  const width=450,height=800;
-  canvas=document.createElement('canvas');canvas.width=width;canvas.height=height;
-  const ctx=canvas.getContext('2d',{alpha:false});
-  if(!ctx)throw Error('Недоступен canvas');
-  const vidStream=canvas.captureStream(24);
+  useDirect=state.refType==='video'&&!$('includeGhost').checked&&$('filter').value==='normal';
+  const width=540,height=960;
+  if(!useDirect){if(!HTMLCanvasElement.prototype.captureStream)throw Error('Нет Canvas captureStream');canvas=document.createElement('canvas');canvas.width=width;canvas.height=height;}
+  const ctx=useDirect?null:canvas.getContext('2d',{alpha:false});
+  if(!useDirect&&!ctx)throw Error('Canvas недоступен');
+  const vidStream=useDirect?state.stream:canvas.captureStream(30);
   mixed=new MediaStream([...vidStream.getVideoTracks(),...(audioTrack?[audioTrack]:[])]);
   const mt=chooseMime(!!audioTrack);if(!mt)throw Error('Не найден видеокодек');
   rec=new MediaRecorder(mixed,{mimeType:mt,videoBitsPerSecond:2200000});
@@ -298,7 +299,7 @@ async function shoot(){
    if(state.animationId){cancelAnimationFrame(state.animationId);state.animationId=0;}
    if(state.interval){clearInterval(state.interval);state.interval=null;}
    if(state.doneTimer){clearTimeout(state.doneTimer);state.doneTimer=null;}
-   if(mixed)mixed.getVideoTracks().forEach(t=>t.stop());
+   if(mixed&&!useDirect)mixed.getVideoTracks().forEach(t=>t.stop());
    rv.pause();rv.loop=true;stopAudio();
    $('rec').style.display='none';$('stepTag').style.display=state.refType==='photos'?'block':'none';
    const blob=new Blob(state.frames,{type:rec.mimeType||'video/webm'});
@@ -323,14 +324,19 @@ async function shoot(){
   const render=()=>{
    if(!state.recording)return;
    const elapsed=performance.now()-state.elapsedStart;
-   const seconds=elapsed/1000;$('clock').textContent=String(Math.floor(seconds/60)).padStart(2,'0')+':'+String(Math.floor(seconds%60)).padStart(2,'0');
+   const seconds=elapsed/1000;
+   $('clock').textContent=String(Math.floor(seconds/60)).padStart(2,'0')+':'+String(Math.floor(seconds%60)).padStart(2,'0');
    if(state.refType==='photos')showPhotoAt(elapsed);
-   ctx.fillStyle='#0b1020';ctx.fillRect(0,0,width,height);
-   videoCover(ctx,cam,width,height,state.face==='user',sourceFilter());
-   drawGhost(ctx,width,height);
-   if(state.refType==='photos'&&$('flash').checked){
-    const pos=elapsed%stepMs;if(elapsed>=stepMs && pos<150){
-     ctx.fillStyle='rgba(255,255,255,'+(0.5*(1-pos/150)).toFixed(3)+')';ctx.fillRect(0,0,width,height);
+   if(!useDirect){
+    ctx.fillStyle='#0b1020';ctx.fillRect(0,0,width,height);
+    videoCover(ctx,cam,width,height,state.face==='user',sourceFilter());
+    drawGhost(ctx,width,height);
+    if(state.refType==='photos'&&$('flash').checked){
+     const pos=elapsed%stepMs;
+     if(elapsed>=stepMs && pos<150){
+      ctx.fillStyle='rgba(255,255,255,'+(0.5*(1-pos/150)).toFixed(3)+')';
+      ctx.fillRect(0,0,width,height);
+     }
     }
    }
    if(elapsed>=maxDuration){stopRecording();return}
@@ -340,10 +346,10 @@ async function shoot(){
   if(state.refType==='video'){try{await rv.play()}catch(e){say('Видеообразец не воспроизводится: '+e.message+'. Возможно, не удастся синхронизировать движения.');}}
   if(state.musicURL&&$('audioMode').value==='music'){try{await music.play()}catch(e){say('Музыка не запустилась: '+e.message+'. Проверь формат файла.');}}
   state.doneTimer=setTimeout(stopRecording,maxDuration+500);
-  say('Идёт запись! Повторяй движения за призраком. Результат будет собран автоматически. Максимум '+Math.ceil(maxDuration/1000)+' секунд.');
+  say('Идёт запись! '+(useDirect?'Чистое видео пишется напрямую с камеры, без 24-FPS Canvas. ':'')+'Повторяй движения за призраком. Максимум '+Math.ceil(maxDuration/1000)+' секунд.');
  }catch(e){
   if(state.animationId){cancelAnimationFrame(state.animationId);state.animationId=0;}
-  if(mixed)mixed.getVideoTracks().forEach(t=>t.stop());
+  if(mixed&&!useDirect)mixed.getVideoTracks().forEach(t=>t.stop());
   if(rec&&rec.state!=='inactive')try{rec.stop()}catch(_){}
   stopAudio();state.starting=false;state.recording=false;state.recorder=null;$('countdown').style.display='none';updateControls();
   say('Не удалось записать: '+(e.message||e)+'. Можно попробовать запись без звука или другое видео.');
