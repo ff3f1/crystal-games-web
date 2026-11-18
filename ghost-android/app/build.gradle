@@ -1,0 +1,34 @@
+plugins { id 'com.android.application' }
+android {
+    namespace 'ru.crystalgames.ghostreel'
+    compileSdk 35
+    defaultConfig {
+        applicationId 'ru.crystalgames.ghostreel'
+        minSdk 26
+        targetSdk 34
+        versionCode (project.findProperty('vCode') ?: '1').toString().toInteger()
+        versionName (project.findProperty('vName') ?: '1.0.0').toString()
+    }
+    signingConfigs {
+        release {
+            def loc = System.getenv('GHOST_KEYSTORE_PATH')
+            if (loc) {
+                storeFile file(loc)
+                storePassword System.getenv('KEYSTORE_PASSWORD')
+                keyAlias System.getenv('KEY_ALIAS')
+                keyPassword System.getenv('KEY_PASSWORD')
+            }
+        }
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            signingConfig System.getenv('GHOST_KEYSTORE_PATH') ? signingConfigs.release : signingConfigs.debug
+        }
+    }
+    compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
+}
+dependencies {
+    implementation 'androidx.webkit:webkit:1.11.0'
+    implementation 'androidx.core:core:1.13.1'
+}
