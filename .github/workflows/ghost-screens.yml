@@ -1,0 +1,39 @@
+name: Ghost Reel Store Screenshots
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/ghost-screens.yml'
+      - 'ghost-android/marketing/**'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  screenshots:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Playwright driver
+        run: npm install --no-save --no-package-lock playwright-core
+      - name: Render actual UI in headless Chrome
+        run: node ghost-android/marketing/capture.cjs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ghost-reel-ui-screenshots
+          path: dist/screens/*.png
+      - name: Publish screenshot branch
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cd dist/screens
+          git init -q -b ghost-screens
+          git config user.email "actions@github.com"
+          git config user.name "ghost-reel-builder"
+          git add -A
+          git commit -qm "Ghost Reel UI screenshots"
+          git push -f "https://x-access-token:$GH_TOKEN@github.com/$GITHUB_REPOSITORY" HEAD:ghost-screens
