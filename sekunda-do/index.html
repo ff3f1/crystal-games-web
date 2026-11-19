@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#090f1e"><meta name="description" content="СЕКУНДА ДО — физическая головоломка. Измени одну вещь, чтобы предотвратить катастрофу.">
+<title>СЕКУНДА ДО — прототип</title>
+<style>
+@import url('data:text/css,');
+:root{font-family:Inter,system-ui,-apple-system,'Segoe UI',Arial,sans-serif;color:#eaf4ff;background:#090e1a;--mint:#c7ff83;--pink:#ff7d91;--muted:#94aabe;}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}body{margin:0;min-height:100svh;background:radial-gradient(ellipse at 50% -10%,#25374c,#091020 62%,#080c15 90%);overflow-x:hidden}
+button{font:inherit;cursor:pointer}button:focus-visible{outline:2px solid #c7ff83;outline-offset:3px}
+main{max-width:1040px;margin:auto;padding:14px max(12px,env(safe-area-inset-right)) 50px;display:grid;grid-template-columns:minmax(320px,475px) minmax(255px,1fr);gap:25px;align-items:start}
+.head{display:flex;align-items:center;justify-content:space-between;max-width:1040px;margin:auto;padding:17px 14px 4px}.brand{display:flex;align-items:center;gap:12px;font-weight:950;letter-spacing:.5px;font-size:22px}.mark{width:35px;height:35px;border-radius:11px;background:linear-gradient(155deg,#dafd94,#72a5ee);display:grid;place-items:center;color:#0e1a2c;font-size:22px;font-weight:900;box-shadow:0 0 25px #a5ed8450}.eyebrow{font-size:10px;letter-spacing:1.7px;font-weight:850;color:#99b8c6}.top-badge{border:1px solid #3a5160;padding:8px 12px;border-radius:20px;font-size:10px;color:#c0d0da;font-weight:850;background:#142335}
+.phone{padding:10px;border:1px solid #3a5063;border-radius:29px;background:linear-gradient(145deg,#1d2b3a,#0a111e);box-shadow:0 25px 70px #0007,0 0 0 1px #e0e9ff12 inset}
+.phone-top{padding:7px 8px 13px;display:flex;justify-content:space-between;align-items:center}.mini{font-size:12px;font-weight:900;letter-spacing:.7px;color:#d1e9ef}.dots{color:#90a9b4;letter-spacing:3px;font-size:14px}
+.scene{position:relative;overflow:hidden;border-radius:20px;background:#152132;touch-action:none;line-height:0;user-select:none;-webkit-user-select:none;border:1px solid #415c6a}
+#game{display:block;width:100%;height:auto;aspect-ratio:420/612;touch-action:none}
+.scene-overlay{position:absolute;inset:0;pointer-events:none;display:none;justify-content:center;align-items:center;background:#0814239c;backdrop-filter:blur(4px);line-height:1.3;text-align:center;padding:20px;z-index:3}
+.scene-overlay.active{display:flex;pointer-events:auto}.overlay-card{background:linear-gradient(150deg,#26374b,#101e2e);width:min(100%,340px);border:1px solid #718e9e;border-radius:23px;padding:25px 16px;box-shadow:0 14px 50px #0009}
+.icon-big{font-size:44px;margin-bottom:6px}.overlay-card h2{margin:8px 0;font-size:29px;letter-spacing:-.6px}.overlay-card p{font-size:13px;line-height:1.5;color:#b9cbd5;margin:12px 0 16px}.overlay-card button{background:var(--mint);color:#182716;border:0;border-radius:13px;padding:14px 17px;font-weight:900;width:100%}
+#resultTag{position:absolute;left:13px;right:13px;top:15px;z-index:2;line-height:1.25;display:none;font-weight:850;border-radius:12px;text-align:center;padding:9px 10px;font-size:13px;box-shadow:0 7px 22px #0005}#resultTag.good{display:block;background:#bcf987e8;color:#193021}#resultTag.bad{display:block;background:#ff7f91eb;color:#44151c}
+.controls{padding:14px 5px 5px}.status{display:flex;gap:10px;align-items:center;justify-content:space-between;font-size:11px;line-height:1.35;margin-bottom:12px;color:#a5b8c6}.state{display:flex;align-items:center;gap:6px;font-weight:850}.state i{width:7px;height:7px;background:#bafa86;border-radius:50%;box-shadow:0 0 8px #bafa86}.move-count{font-variant-numeric:tabular-nums;color:#d9e7ee}
+.primary{width:100%;border:0;border-radius:16px;padding:17px 18px;background:linear-gradient(110deg,#d8ffaa,#acfa7c);font-weight:950;letter-spacing:.25px;color:#19321d;font-size:17px;box-shadow:0 8px 24px #a7ff8330;min-height:60px}.primary:disabled{background:#536475;color:#b2c5ce;box-shadow:none}
+.bottom-buttons{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}.sub-btn{padding:11px 13px;border-radius:13px;border:1px solid #375166;background:#203146;color:#d2e4ec;font-weight:800;font-size:12px}.sub-btn:disabled{opacity:.45}
+aside{padding:7px 0}.label{letter-spacing:2px;color:#baff87;font-weight:850;font-size:11px}.big{margin:8px 0 6px;line-height:.96;font-size:clamp(39px,5vw,58px);font-weight:950;letter-spacing:-2px}.big span{color:var(--mint)}.intro{font-size:14px;color:#9db3c4;line-height:1.55;max-width:470px;margin:15px 0 22px}
+.card{background:linear-gradient(145deg,#1d3043,#111d2d);border:1px solid #354e62;border-radius:19px;padding:19px;margin-bottom:14px}.card h3{font-size:13px;letter-spacing:1px;margin:0 0 11px;color:#d9f1ed}.mission-name{font-weight:950;font-size:23px;margin-bottom:8px}.mission-text{font-size:13px;color:#aac1cf;line-height:1.6}.objective{display:flex;align-items:start;gap:9px;margin:14px 0 0;background:#0e2631;border-radius:12px;border:1px solid #2d5f59;padding:12px 11px;color:#c6f9db;font-size:12px;line-height:1.5}
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:14px 0}.step{border-radius:12px;border:1px solid #3d5263;background:#18293a;padding:12px 5px;text-align:center;color:#a6bac9;font-size:11px;font-weight:850;line-height:1.4}.step b{font-size:19px;display:block;color:#aaf18c;margin-bottom:5px}
+#levels{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}#levels button{padding:10px 7px;border-radius:12px;border:1px solid #4b6474;background:#192a3b;color:#b2c5d3;font-size:11px;font-weight:850;line-height:1.3;min-height:64px}#levels button.active{border-color:#bafb8a;color:#dcffc3;background:#273d3e;box-shadow:0 0 0 1px #bafb8a6b inset}
+.tip{font-size:12px;color:#83a1b2;line-height:1.55;padding:0 6px}.hint{color:#e6f5ca;font-weight:750}
+footer{max-width:1040px;padding:2px 15px 20px;margin:auto;color:#70899d;font-size:11px;line-height:1.5}
+@media(max-width:760px){main{grid-template-columns:1fr;max-width:490px;padding-top:12px;gap:21px}.head{max-width:490px}.brand{font-size:19px}aside{padding:0}.big{font-size:37px}.intro{margin:9px 0 15px}.phone{padding:7px;border-radius:22px}.scene{border-radius:17px}.controls{padding:12px 4px 4px}.card{padding:15px}.top-badge{font-size:9px}.steps{margin-bottom:8px}footer{max-width:490px}}
+@media(max-width:390px){.brand{font-size:17px}.top-badge{padding:7px;font-size:8px}.primary{padding:13px}.big{font-size:34px}.phone-top{padding:4px 7px 8px}main{padding-left:7px;padding-right:7px}}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<div class="head"><div class="brand"><span class="mark">⏱</span> СЕКУНДА ДО</div><span class="top-badge">ИГРАЕМЫЙ ПРОТОТИП 0.1</span></div>
+<main>
+<section class="phone" aria-label="Игровое поле">
+<div class="phone-top"><span class="mini" id="sceneNum">01 / 03</span><span class="dots">● ○ ○</span><span class="mini" id="clock">⏸ 01.0s</span></div>
+<div class="scene" id="scene"><canvas id="game" width="420" height="612" aria-label="Игровая сцена. Перетащи один из подсвеченных предметов и запусти время."></canvas><div id="resultTag"></div>
+<div id="introOverlay" class="scene-overlay active"><div class="overlay-card"><div class="icon-big">⏸</div><h2>СЕКУНДА ДО</h2><p>Мир остановился перед катастрофой.<br>Ты можешь передвинуть <b>один предмет</b>.<br><br>Что произойдёт, когда время пойдёт снова?</p><button id="enter">ПОПРОБОВАТЬ →</button></div></div>
+</div>
+<div class="controls"><div class="status"><span class="state"><i id="light"></i><span id="stateName">ВРЕМЯ ОСТАНОВЛЕНО</span></span><span class="move-count" id="moveCount">МОЖНО СДВИНУТЬ 1 ПРЕДМЕТ</span></div>
+<button id="play" class="primary">▶ ПУСТИТЬ ВРЕМЯ</button>
+<div class="bottom-buttons"><button class="sub-btn" id="reset">↶ ДРУГОЕ РЕШЕНИЕ</button><button class="sub-btn" id="next">СЛЕДУЮЩАЯ СЦЕНА →</button></div>
+</div></section>
+<aside><div class="label">ФИЗИЧЕСКАЯ ГОЛОВОЛОМКА</div><h1 class="big">ОДНА ВЕЩЬ.<br><span>ДРУГОЙ ФИНАЛ.</span></h1><p class="intro">Не управляй героем. Измени мир за мгновение до неприятности — и наблюдай последствия своего решения.</p>
+<div class="card"><h3>СИТУАЦИЯ <span id="levelBadge">01</span></h3><div class="mission-name" id="missionName">Кофе и короткое замыкание</div><div class="mission-text" id="missionText">Шарик вот-вот опрокинет кружку. Рядом розетка. Одно касание может всё изменить.</div><div class="objective"><span style="font-size:19px">◎</span><span id="objective">Цель: не допустить попадания кофе на розетку.</span></div></div>
+<div class="steps"><div class="step"><b>☝</b>ПОДВИНЬ</div><div class="step"><b>▶</b>ЗАПУСТИ</div><div class="step"><b>↶</b>ПОВТОРИ</div></div>
+<div class="card"><h3>ВЫБЕРИ СИТУАЦИЮ</h3><div id="levels"><button data-scene="0" class="active">01<br>КОФЕ</button><button data-scene="1">02<br>ГОРШОК</button><button data-scene="2">03<br>ДОМИНО</button></div></div>
+<p class="tip"><span class="hint">Подсветка — предметы, которые можно двигать.</span> Перемещай мышью или пальцем. В каждой попытке можно изменить только один объект. Не угадал? Сразу пробуй снова. Есть несколько способов спасти ситуацию.</p>
+</aside>
+</main><footer>Автономный тест без рекламы, аккаунтов и внешних библиотек. Сцены моделируются локально; физика упрощена специально для проверки идеи. Это ещё не финальная игра.</footer>
+<script>
+(()=>{'use strict';
+const $=id=>document.getElementById(id),C=$('game'),g=C.getContext('2d'),W=420,H=612;
+const sceneTitles=[['Кофе и короткое замыкание','Шарик вот-вот опрокинет кружку. Рядом розетка. Одно касание может всё изменить.','Не допустить попадания кофе на розетку.'],['Горшок с балкона','Подул порыв ветра. Цветочный горшок падает прямо на прохожего.','Убрать человека с траектории или перехватить горшок.'],['Цепная реакция','Первая костяшка падает, и вся линия направляется к красной тревожной кнопке.','Не дать последней костяшке нажать тревогу.']];
+let level=0,phase='plan',objects=[],drag=null,used=null,clock=0,last=0,outcome=null,particles=[],shake=0,fxAt={},audioCtx=null,mute=false,planPulse=0, introOpen=true;
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),hypot=(x,y)=>Math.hypot(x,y);
+const defScenes=[
+ [{id:'mug',name:'Кружка',x:208,y:331,w:35,h:52,kind:'mug',minX:38,maxX:382,minY:135,maxY:395},
+  {id:'socket',name:'Розетка',x:310,y:543,w:48,h:43,kind:'socket',minX:35,maxX:384,minY:518,maxY:560},
+  {id:'stop',name:'Стопор',x:136,y:486,w:46,h:35,kind:'stop',minX:40,maxX:380,minY:280,maxY:514}],
+ [{id:'pot',name:'Горшок',x:154,y:207,w:52,h:57,kind:'pot',minX:40,maxX:365,minY:126,maxY:282},
+  {id:'human',name:'Прохожий',x:270,y:492,w:51,h:135,kind:'human',minX:45,maxX:375,minY:482,maxY:492},
+  {id:'umbrella',name:'Навес',x:91,y:457,w:102,h:23,kind:'umbrella',minX:70,maxX:355,minY:408,maxY:472}],
+ [{id:'d1',name:'Домино',x:111,y:496,w:18,h:69,kind:'domino',minX:35,maxX:385,minY:365,maxY:515},
+  {id:'d2',name:'Домино',x:165,y:496,w:18,h:69,kind:'domino',minX:35,maxX:385,minY:365,maxY:515},
+  {id:'d3',name:'Домино',x:219,y:496,w:18,h:69,kind:'domino',minX:35,maxX:385,minY:365,maxY:515},
+  {id:'d4',name:'Домино',x:273,y:496,w:18,h:69,kind:'domino',minX:35,maxX:385,minY:365,maxY:515},
+  {id:'block',name:'Ограничитель',x:330,y:471,w:31,h:51,kind:'stop',minX:35,maxX:380,minY:365,maxY:520}]
+];
+function get(id){return objects.find(o=>o.id===id)}
+function emit(x,y,col,n=25){for(let i=0;i<n;i++)particles.push({x,y,vx:(Math.random()-.5)*240,vy:(Math.random()-.8)*210,life:.65+Math.random()*.6,col,sz:2+Math.random()*4})}
+function beep(freq=300,dur=.12,type='sine',gain=.08){if(mute)return;try{audioCtx??=new (window.AudioContext||window.webkitAudioContext)();audioCtx.resume();const o=audioCtx.createOscillator(),a=audioCtx.createGain();o.type=type;o.frequency.setValueAtTime(freq,audioCtx.currentTime);o.frequency.exponentialRampToValueAtTime(Math.max(40,freq*.7),audioCtx.currentTime+dur);a.gain.setValueAtTime(gain,audioCtx.currentTime);a.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+dur);o.connect(a);a.connect(audioCtx.destination);o.start();o.stop(audioCtx.currentTime+dur)}catch(_){}}
+function reset(scene=level){level=scene;phase='plan';objects=defScenes[level].map(o=>({...o,ox:o.x,oy:o.y}));used=null;drag=null;clock=0;outcome=null;particles=[];fxAt={};shake=0;last=performance.now();$('resultTag').style.display='none';$('sceneNum').textContent=String(level+1).padStart(2,'0')+' / 03';$('levelBadge').textContent=String(level+1).padStart(2,'0');$('missionName').textContent=sceneTitles[level][0];$('missionText').textContent=sceneTitles[level][1];$('objective').textContent='Цель: '+sceneTitles[level][2];$('play').textContent='▶ ПУСТИТЬ ВРЕМЯ';$('play').disabled=false;$('next').textContent='СЛЕДУЮЩАЯ СЦЕНА →';document.querySelectorAll('[data-scene]').forEach(b=>b.classList.toggle('active',Number(b.dataset.scene)===level));syncHud()}
+function syncHud(){let running=phase==='run';$('clock').textContent=running?'▶ '+(clock).toFixed(1)+'s':phase==='plan'?'⏸ 01.0s':'■ КОНЕЦ';$('stateName').textContent=running?'МИР В ДВИЖЕНИИ':phase==='plan'?'ВРЕМЯ ОСТАНОВЛЕНО':outcome?.good?'КАТАСТРОФА ПРЕДОТВРАЩЕНА':'ПОПРОБУЙ ЕЩЁ РАЗ';$('moveCount').textContent=running?'НАБЛЮДАЙ':phase==='plan'?used?'ИЗМЕНЁН: '+used.name.toUpperCase():'МОЖНО СДВИНУТЬ 1 ПРЕДМЕТ':outcome?.good?'УСПЕХ':'ПОПЫТКА НЕ УДАЛАСЬ';$('light').style.background=running?'#fdcf88':phase==='result'&&outcome&&!outcome.good?'#ff8c96':'#bafa86'}
+function start(){if(phase==='result'){reset();return}if(phase!=='plan'||introOpen)return;phase='run';clock=0;last=performance.now();$('play').disabled=true;$('play').textContent='СЕКУНДУ...';syncHud();beep(530,.19,'triangle',.07)}
+function finish(good,txt){if(phase!=='run')return;phase='result';outcome={good,txt};$('resultTag').className=good?'good':'bad';$('resultTag').style.display='block';$('resultTag').textContent=(good?'✓ ':'✕ ')+txt;$('play').disabled=false;$('play').textContent=good?'↻ ПЕРЕИГРАТЬ':'↻ ПОПРОБОВАТЬ ЕЩЁ';if(good){emit(202,212,'#bafe89',60);beep(770,.22,'sine',.13);setTimeout(()=>beep(1050,.23,'sine',.09),100)}else{shake=12;emit(275,405,'#ff8099',45);beep(160,.32,'sawtooth',.08)}syncHud()}
+function movePoint(e){const r=C.getBoundingClientRect();return{x:(e.clientX-r.left)*W/r.width,y:(e.clientY-r.top)*H/r.height}}
+function objectAt(x,y){for(let i=objects.length-1;i>=0;i--){const o=objects[i];if(Math.abs(x-o.x)<o.w/2+22&&Math.abs(y-o.y)<o.h/2+22)return o}return null}
+C.addEventListener('pointerdown',e=>{if(phase!=='plan'||introOpen)return;const p=movePoint(e),o=objectAt(p.x,p.y);if(!o||used&&used.id!==o.id)return;try{C.setPointerCapture(e.pointerId)}catch(_){}drag={id:e.pointerId,o,dx:o.x-p.x,dy:o.y-p.y,moved:false};beep(390,.04,'sine',.028)});
+C.addEventListener('pointermove',e=>{if(!drag||drag.id!==e.pointerId)return;const p=movePoint(e),o=drag.o;let x=clamp(p.x+drag.dx,o.minX,o.maxX),y=clamp(p.y+drag.dy,o.minY,o.maxY);if(Math.abs(x-o.ox)>5||Math.abs(y-o.oy)>5){drag.moved=true;used=o}o.x=x;o.y=y});
+function endPointer(e){if(drag&&drag.id===e.pointerId){drag=null;syncHud()}}
+C.addEventListener('pointerup',endPointer);C.addEventListener('pointercancel',endPointer);window.addEventListener('blur',()=>drag=null);
+$('play').onclick=start;$('reset').onclick=()=>reset();$('next').onclick=()=>{reset((level+1)%3)};document.querySelectorAll('[data-scene]').forEach(b=>b.onclick=()=>reset(Number(b.dataset.scene)));$('enter').onclick=()=>{introOpen=false;$('introOverlay').classList.remove('active');beep(670,.12,'triangle',.09)};
+function rounded(x,y,w,h,r,fill,stroke=null,line=1){g.beginPath();g.roundRect(x,y,w,h,r);if(fill){g.fillStyle=fill;g.fill()}if(stroke){g.strokeStyle=stroke;g.lineWidth=line;g.stroke()}}
+function lin(x1,y1,x2,y2,col='#ecf7ff',w=2){g.beginPath();g.moveTo(x1,y1);g.lineTo(x2,y2);g.strokeStyle=col;g.lineWidth=w;g.stroke()}
+function text(str,x,y,size=14,col='#eaf7ff',weight='800',align='left'){g.fillStyle=col;g.textAlign=align;g.font=weight+' '+size+'px system-ui,Arial';g.fillText(str,x,y)}
+function circle(x,y,r,fill,stroke=null,width=1){g.beginPath();g.arc(x,y,r,0,Math.PI*2);g.fillStyle=fill;g.fill();if(stroke){g.strokeStyle=stroke;g.lineWidth=width;g.stroke()}}
+function baseBG(top='#253d50',bottom='#0d1626'){const b=g.createLinearGradient(0,0,0,H);b.addColorStop(0,top);b.addColorStop(1,bottom);g.fillStyle=b;g.fillRect(0,0,W,H);let rg=g.createRadialGradient(230,140,10,230,140,390);rg.addColorStop(0,'#d9ffb00c');rg.addColorStop(1,'#08142200');g.fillStyle=rg;g.fillRect(0,0,W,H)}
+function high(o){if(phase!=='plan')return;const m=used&&used.id!==o.id;if(m)return;const a=.37+Math.sin(planPulse*3)*.13;g.save();g.setLineDash([6,6]);rounded(o.x-o.w/2-7,o.y-o.h/2-7,o.w+14,o.h+14,12,null,`rgba(196,255,144,${a})`,2);g.setLineDash([]);circle(o.x+o.w/2+5,o.y-o.h/2-9,7,'#bbff86');g.restore()}
+function cup(x,y,tilt=0){g.save();g.translate(x,y);g.rotate(tilt);rounded(-18,-25,36,52,7,'#f9f3da','#ffffff',2);rounded(-20,-28,40,7,4,'#f5fff9');g.beginPath();g.arc(20,-2,12,-Math.PI/2,Math.PI/2);g.strokeStyle='#fdf9ed';g.lineWidth=7;g.stroke();circle(-1,-5,8,'#bbcfbf');text('☕',-11,3,17,'#6c625b');g.restore()}
+function ball(x,y){g.save();g.shadowBlur=9;g.shadowColor='#ecffe74a';circle(x,y,13,'#f2a94f','#ffe1a4',2);circle(x-4,y-4,4,'#ffe7bc');g.restore()}
+function socket(x,y,hot=false){rounded(x-25,y-23,50,46,9,hot?'#ffcb8b':'#d8e6e8','#86a6b4',2);circle(x-10,y,5,'#485d6d');circle(x+10,y,5,'#485d6d');circle(x,y+13,4,'#485d6d');if(hot){lin(x-13,y-33,x-5,y-21,'#ffe168',3);lin(x+7,y-35,x+16,y-23,'#ff6478',3)}}
+function stopper(x,y){rounded(x-23,y-17,46,34,7,'#4e788b','#b8e3d9',2);lin(x-16,y+7,x+16,y+7,'#a7d7da',2);rounded(x-7,y-25,14,10,5,'#c1f697')}
+function levelCoffee(){baseBG('#2b4656','#152332');for(let i=0;i<9;i++){const x=45+i*45;lin(x,0,x+16,285,'#a4c7d00a',1)}rounded(20,24,182,37,10,'#19303ebb');text('01  •  КОФЕ И ИСКРА',34,49,13,'#d5f4d9');rounded(22,360,251,18,4,'#b8a17d');rounded(16,373,270,11,4,'#806f62');rounded(26,382,18,170,3,'#566477');rounded(247,382,17,169,3,'#536378');
+rounded(0,578,W,34,0,'#283d4e');for(let i=0;i<11;i++)lin(i*47,583,i*47,612,'#476072',1);
+// cat perched on left shelf, animated paw
+const paw=phase==='run'?Math.sin(Math.min(clock,1.2)*5)*12:0;g.save();g.translate(29,335);circle(0,0,22,'#d5b9a5');g.beginPath();g.moveTo(-19,-14);g.lineTo(-15,-36);g.lineTo(-5,-23);g.lineTo(7,-38);g.lineTo(15,-18);g.fillStyle='#d5b9a5';g.fill();circle(-6,-2,2,'#304355');circle(7,-2,2,'#304355');lin(18,0,31+paw,-4,'#d5b9a5',8);g.restore();
+const mug=get('mug'),out=get('socket'),stop=get('stop'),t=clock;
+// stopper is a piece of movable obstacle. Collision checked against rolling ball.
+let bx=74+132*t,blocked=false,hit=false,drop=false,spill=false,cx=mug.x,cy=mug.y,tilt=0;
+const ballNearShelf=()=>Math.abs(stop.y-342)<39&&stop.x>69&&stop.x<mug.x&&stop.x<290;
+if(phase!=='plan'){
+ if(ballNearShelf()&&bx>stop.x-30){bx=stop.x-30;blocked=true}
+ const hitTime=(mug.x-37-74)/132;
+ if(!blocked&&t>Math.max(.05,hitTime)&&Math.abs(mug.y-331)<54&&mug.x<267){hit=true;let dt=t-Math.max(.05,hitTime);cx=mug.x+115*dt;tilt=Math.min(.35,dt*.27);const edgeT=(270-mug.x)/115;
+ if(dt>edgeT){drop=true;const fall=dt-edgeT;cx=270+Math.min(60,45*fall);cy=mug.y+185*fall*fall;tilt=Math.min(1.25,fall*.8)}
+ }
+ if((mug.x>273||mug.y>399)&&!hit){drop=true;cy=mug.y+205*t*t}
+ cy=Math.min(cy,545);
+ spill=drop&&cy>=545;
+ }
+ if(bx<410&&bx>0)ball(bx,343);
+ stopper(stop.x,stop.y);
+ if(spill){g.fillStyle='#9b69485c';g.beginPath();g.ellipse(cx+18,569,48,8,0,0,Math.PI*2);g.fill();for(let i=0;i<7;i++)circle(cx-31+i*12,561+Math.sin(i*10)*3,2,'#b27a54');if(!fxAt.spill){fxAt.spill=1;emit(cx,554,'#d6b691',23);beep(110,.17,'sawtooth',.055)}}
+ cup(cx,cy,tilt);socket(out.x,out.y,spill&&Math.abs(cx-out.x)<85);
+ if(phase==='run'&&clock>4.4){const danger=spill&&Math.abs(cx-out.x)<85;finish(!danger,danger?'КОФЕ ПОПАЛ НА РОЗЕТКУ':'КОРОТКОГО ЗАМЫКАНИЯ НЕТ')}
+ [mug,out,stop].forEach(high);
+ text('СДВИНЬ 1 ПРЕДМЕТ',23,603,11,'#d3e3d6');
+}
+function pot(x,y,ang=0){g.save();g.translate(x,y);g.rotate(ang);rounded(-23,-6,46,38,7,'#d8896a','#ffc0a0',2);rounded(-28,-13,56,12,4,'#bc6755','#ffe0bd',1);lin(0,-17,0,-58,'#567a53',5);g.beginPath();g.ellipse(-20,-43,20,8,-Math.PI/4,0,Math.PI*2);g.fillStyle='#b2e08b';g.fill();g.beginPath();g.ellipse(20,-43,20,8,Math.PI/4,0,Math.PI*2);g.fillStyle='#91c977';g.fill();g.restore()}
+function human(x,y){g.save();g.translate(x,y);circle(0,-44,21,'#e4b49e');rounded(-25,-23,50,66,17,'#8ca9d4');lin(-17,31,-27,65,'#4a668f',13);lin(18,31,30,65,'#4a668f',13);lin(-19,-7,-39,19,'#e4b49e',10);lin(20,-7,39,19,'#e4b49e',10);g.restore()}
+function umbrella(x,y){g.save();g.translate(x,y);g.beginPath();g.moveTo(-53,1);g.quadraticCurveTo(0,-56,53,1);g.closePath();g.fillStyle='#c0fc91';g.fill();lin(0,0,0,95,'#bfe4ef',4);g.beginPath();g.arc(10,96,10,0,Math.PI);g.strokeStyle='#bfe4ef';g.lineWidth=4;g.stroke();g.restore()}
+function levelPot(){baseBG('#264153','#15283a');rounded(14,33,160,36,8,'#132939');text('02  •  НЕБЕЗОПАСНЫЙ ДЕНЬ',26,56,12,'#d6f6dc');
+// apartment skyline
+for(let i=0;i<4;i++){const x=i*125-18;rounded(x,110,100,460,4,['#344b5d','#39546c','#2e4a5d','#3a5369'][i]);for(let j=0;j<5;j++)for(let z=0;z<2;z++)rounded(x+15+z*40,132+j*75,25,48,3,(j+z+i)%3===0?'#ffc97d61':'#7292a060')}
+rounded(0,570,W,42,0,'#314457');for(let i=0;i<7;i++)rounded(i*75+9,589,39,4,1,'#bad2d455');
+rounded(45,244,205,14,3,'#bbb8ae');rounded(42,256,211,10,2,'#768d95');
+const o=get('pot'),h=get('human'),u=get('umbrella');let x=o.x,y=o.y,angled=0,covered=false,dt=Math.max(0,clock-.42),impact=false;
+if(phase!=='plan'&&dt>0){x=o.x+62*dt;y=Math.min(559,o.y+180*dt*dt);angled=Math.min(1.5,dt*.38);covered=Math.abs(u.x-x)<60&&Math.abs(y-u.y)<65&&u.y>372&&u.y<482;
+ const interceptT=Math.sqrt(Math.max(0,u.y-o.y)/180);const interceptX=o.x+62*interceptT;
+ if(Math.abs(u.x-interceptX)<57&&u.y>370&&u.y<485&&dt>interceptT){covered=true;x=interceptX;y=u.y-20;angled=2.5+dt*2;if(!fxAt.bounce){fxAt.bounce=1;emit(x,y,'#c1f992',18);beep(480,.12,'triangle',.06)}}
+ impact=y>=552&&!covered;
+ if(impact&&!fxAt.impact){fxAt.impact=1;emit(x,y,'#f2a27f',28);shake=8;beep(110,.20,'sawtooth',.06)}
+ }
+ human(h.x,h.y);umbrella(u.x,u.y);pot(x,y,angled);
+ if(phase==='run'&&clock>3.4){const impactX=o.x+62*Math.sqrt(Math.max(0,(552-o.y)/180));const danger=!covered&&Math.abs(impactX-h.x)<48;finish(!danger,danger?'ГОРШОК ПОПАЛ В ПРОХОЖЕГО':covered?'НАВЕС ПРИНЯЛ УДАР':'ПРОХОЖИЙ В БЕЗОПАСНОСТИ')}
+ [o,h,u].forEach(high);
+ text('ВЕТЕР →',277,156,18,'#bfe9ce');lin(281,166,360,166,'#a5eec1',2);lin(351,158,360,166,'#a5eec1',2);lin(351,174,360,166,'#a5eec1',2)
+}
+function domino(x,y,index,angle=0){g.save();g.translate(x,y+33);g.rotate(angle);rounded(-9,-65,18,69,3,index%2?'#95bfd0':'#c9d3d6','#f4fdff',1);for(let k=0;k<2;k++)circle(0,-45+k*22,3,'#3b5366');g.restore()}
+function levelDomino(){baseBG('#26364d','#131d31');rounded(13,25,180,37,9,'#17283eb9');text('03  •  ЦЕПНАЯ РЕАКЦИЯ',24,50,13,'#d5e4f4');
+for(let i=0;i<15;i++){rounded(10+(i%5)*87,160+Math.floor(i/5)*98,50,37,5,'#7286a319')}
+rounded(0,539,W,73,0,'#354c5c');for(let i=0;i<11;i++)lin(i*42,541,i*42,612,'#4b6573',1);
+const arr=[{x:57,y:496},...objects.slice(0,4)];const block=get('block');let reached=1,changed=false,stopBlock=false;
+for(let i=1;i<arr.length;i++){
+ const a=arr[i-1],b=arr[i];if(Math.abs(b.x-a.x)>62||Math.abs(b.y-a.y)>35||b.x<a.x+20){changed=true;break}
+ // stopper between the dominoes, moved onto the row
+ if(block.y>458&&block.y<516&&block.x>a.x+12&&block.x<b.x-12){changed=true;stopBlock=true;break}
+ reached++;
+}
+// default stopper at x330 so it won't interrupt the row by accident
+const dStart=.2;
+for(let i=0;i<arr.length;i++){
+ const d=arr[i];const active=i<reached;
+ const progress=active?clamp((clock-dStart-i*.44)/.34,0,1):0;
+ domino(d.x,d.y,i,phase==='plan'?0:progress*.98);
+ if(progress>.8&&!fxAt['fall'+i]){fxAt['fall'+i]=1;emit(d.x+14,d.y+10,'#bddce1',8);beep(250+i*42,.06,'triangle',.035)}
+}
+stopper(block.x,block.y);
+rounded(342,475,58,68,10,'#394e62','#7796a6',3);circle(372,500,17,clock>2.4&&reached===5?'#ff748e':'#fa4f68','#ffb4bf',3);text('!',372,507,18,'#fff','900','center');text('Т Р Е В О Г А',312,566,10,'#ffa3ac');
+if(phase==='run'&&clock>3.6){const danger=reached===5;finish(!danger,danger?'ЗАПУЩЕНА ТРЕВОГА':stopBlock?'ОГРАНИЧИТЕЛЬ РАЗОРВАЛ ЦЕПЬ':'ЦЕПОЧКА ПРЕРВАНА')}
+objects.forEach(high);
+}
+function draw(){g.save();if(shake>0)g.translate((Math.random()-.5)*shake,(Math.random()-.5)*shake);if(level===0)levelCoffee();if(level===1)levelPot();if(level===2)levelDomino();
+for(const p of particles){circle(p.x,p.y,p.sz,p.col)}g.restore();if(phase==='plan'){g.save();g.globalAlpha=.25+Math.sin(planPulse*2)*.1;rounded(23,75,240,39,10,'#091724');text('⏸  ВРЕМЯ ОСТАНОВЛЕНО',37,101,13,'#e8ffc5');g.restore()} }
+function frame(ms){let dt=Math.min(.048,Math.max(0,(ms-last)/1000||0));last=ms;planPulse+=dt;if(phase==='run'){clock+=dt;syncHud()}
+for(const p of particles){p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=410*dt;p.life-=dt}particles=particles.filter(p=>p.life>0);shake=Math.max(0,shake-dt*29);draw();requestAnimationFrame(frame)}
+reset(0);last=performance.now();requestAnimationFrame(frame);
+})();
+</script>
+</body></html>
